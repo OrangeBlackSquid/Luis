@@ -1,1228 +1,625 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Geometry Dash – Stereo Madness, Back on Track, Polargeist</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Arial', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #0f0f1a;
-            touch-action: none;
-        }
-
-        #game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-            background: linear-gradient(180deg, #1a1a3e 0%, #0f0f1a 100%);
-        }
-
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-            image-rendering: pixelated;
-        }
-
-        /* UI Overlay */
-        #ui {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-        }
-
-        #ui > * {
-            pointer-events: auto;
-        }
-
-        .menu-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(10, 10, 26, 0.92);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            z-index: 20;
-        }
-
-        .menu-screen.hidden {
-            display: none;
-        }
-
-        h1 {
-            color: #fff;
-            font-size: 28px;
-            text-shadow: 0 0 20px rgba(94, 207, 122, 0.8);
-            margin-bottom: 10px;
-            text-align: center;
-        }
-
-        h2 {
-            color: #9ca3af;
-            font-size: 14px;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .level-select {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            width: 80%;
-            max-width: 400px;
-        }
-
-        .level-btn {
-            background: rgba(255, 255, 255, 0.08);
-            border: 2px solid rgba(255, 255, 255, 0.15);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 16px;
-            font-weight: bold;
-            text-align: left;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .level-btn:hover, .level-btn:active {
-            background: rgba(94, 207, 122, 0.2);
-            border-color: #5ecf7a;
-            transform: scale(1.02);
-        }
-
-        .level-btn .diff {
-            font-size: 12px;
-            font-weight: normal;
-            opacity: 0.7;
-        }
-
-        #hud {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            padding: 10px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 5;
-            pointer-events: none;
-        }
-
-        #progress-bar-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.1);
-            z-index: 6;
-        }
-
-        #progress-bar {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #5ecf7a, #a3e635);
-            transition: width 0.1s linear;
-            border-radius: 0 3px 3px 0;
-        }
-
-        #attempts {
-            color: white;
-            font-size: 14px;
-            font-weight: bold;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-
-        #percentage {
-            color: #5ecf7a;
-            font-size: 16px;
-            font-weight: bold;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-
-        #back-btn {
-            position: absolute;
-            top: 50px;
-            left: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            z-index: 15;
-        }
-
-        #back-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        #death-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(200, 0, 0, 0.3);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 15;
-            pointer-events: none;
-        }
-
-        #death-screen.hidden {
-            display: none;
-        }
-
-        #death-screen .text {
-            color: white;
-            font-size: 32px;
-            font-weight: bold;
-            text-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
-        }
-
-        #death-screen .sub {
-            color: #ddd;
-            font-size: 16px;
-            margin-top: 10px;
-        }
-
-        .controls-hint {
-            color: #6b7280;
-            font-size: 13px;
-            margin-top: 10px;
-            text-align: center;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ORBITAL</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body {
+    width:100%; height:100%; overflow:hidden;
+    background:#050810; touch-action:none;
+    -webkit-user-select:none; user-select:none;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  #c { display:block; width:100%; height:100%; }
+  #hud {
+    position:absolute; top:0; left:0; right:0; padding:24px;
+    display:flex; justify-content:center; pointer-events:none; z-index:10;
+  }
+  #score {
+    color:#fff; font-size:46px; font-weight:800; letter-spacing:3px;
+    text-shadow:0 0 20px rgba(94,207,122,0.9), 0 0 44px rgba(94,207,122,0.5);
+  }
+  .screen {
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    justify-content:center; align-items:center; gap:14px; z-index:20;
+    background:radial-gradient(circle at center,rgba(10,15,30,0.65) 0%,rgba(5,8,16,0.96) 100%);
+    cursor:pointer; text-align:center; padding:20px;
+  }
+  .screen.hidden { display:none; }
+  .title {
+    color:#fff; font-size:56px; font-weight:900; letter-spacing:10px;
+    text-shadow:0 0 30px rgba(94,207,122,1), 0 0 60px rgba(94,207,122,0.5);
+    margin-bottom:12px;
+  }
+  .sub { color:#5ecf7a; font-size:13px; letter-spacing:4px; text-transform:uppercase; }
+  .hint { color:#8899aa; font-size:13px; margin-top:24px; letter-spacing:2px; animation:pulse 1.6s infinite; }
+  @keyframes pulse { 0%,100%{opacity:0.5;} 50%{opacity:1;} }
+  .gameover-title {
+    color:#ff4466; font-size:32px; font-weight:800; letter-spacing:6px;
+    text-shadow:0 0 24px rgba(255,68,102,0.9);
+  }
+  .big { color:#fff; font-size:80px; font-weight:900; margin:8px 0;
+    text-shadow:0 0 32px rgba(94,207,122,0.9); }
+  .best { color:#ffcc00; font-size:15px; letter-spacing:3px; margin-top:4px; }
+</style>
 </head>
 <body>
+<canvas id="c"></canvas>
+<div id="hud"><div id="score">0</div></div>
 
-<div id="game-container">
-    <canvas id="gameCanvas"></canvas>
+<div id="menu" class="screen">
+  <div class="title">ORBITAL</div>
+  <div class="sub">Chain Orbits · Slingshot Forward</div>
+  <div class="hint">TAP TO START</div>
+</div>
 
-    <!-- HUD -->
-    <div id="hud" style="display:none;">
-        <div id="attempts">Versuch: 1</div>
-        <div id="percentage">0%</div>
-    </div>
-    <div id="progress-bar-container" style="display:none;">
-        <div id="progress-bar"></div>
-    </div>
-    <button id="back-btn" style="display:none;">← Menü</button>
-
-    <!-- Death Screen -->
-    <div id="death-screen" class="hidden">
-        <div class="text">💀 Game Over</div>
-        <div class="sub">Tippe zum Neustart</div>
-    </div>
-
-    <!-- Hauptmenü -->
-    <div id="menu" class="menu-screen">
-        <h1>GEOMETRY DASH</h1>
-        <h2>Wähle ein Level</h2>
-        <div class="level-select">
-            <button class="level-btn" data-level="0">
-                <span>1. Stereo Madness</span>
-                <span class="diff">⭐ Easy – 1 Stern</span>
-            </button>
-            <button class="level-btn" data-level="1">
-                <span>2. Back on Track</span>
-                <span class="diff">⭐⭐ Easy – 2 Sterne</span>
-            </button>
-            <button class="level-btn" data-level="2">
-                <span>3. Polargeist</span>
-                <span class="diff">⭐⭐⭐ Normal – 3 Sterne</span>
-            </button>
-        </div>
-        <p class="controls-hint">Leertaste / Klick / Tap = Springen</p>
-    </div>
+<div id="gameover" class="screen hidden">
+  <div class="gameover-title">GAME OVER</div>
+  <div class="big" id="final-score">0</div>
+  <div class="best" id="best-score">BEST: 0</div>
+  <div class="hint">TAP TO RETRY</div>
 </div>
 
 <script>
-/* ============================================================
-   GEOMETRY DASH – WEB CLONE
-   Level 1-3: Stereo Madness, Back on Track, Polargeist
-   ============================================================ */
+(() => {
+'use strict';
 
-const canvas = document.getElementById('gameCanvas');
+// ============ CANVAS ============
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-
-// --- DOM Elemente ---
+const scoreEl = document.getElementById('score');
 const menuEl = document.getElementById('menu');
-const hudEl = document.getElementById('hud');
-const attemptsEl = document.getElementById('attempts');
-const percentageEl = document.getElementById('percentage');
-const progressBar = document.getElementById('progress-bar');
-const progressContainer = document.getElementById('progress-bar-container');
-const backBtn = document.getElementById('back-btn');
-const deathScreen = document.getElementById('death-screen');
+const gameoverEl = document.getElementById('gameover');
+const finalScoreEl = document.getElementById('final-score');
+const bestScoreEl = document.getElementById('best-score');
 
-// --- Spielfeld ---
-const GROUND_Y = 380;          // Y-Position des Bodens (Oberkante)
-const CEILING_Y = 0;           // Decke
-const BLOCK_SIZE = 40;         // Größe eines Blocks
-const PLAYER_SIZE = 34;        // Größe des Spielers
+let W = 0, H = 0, DPR = 1;
 
-// --- Spielzustand ---
-let gameState = 'menu';        // 'menu', 'playing', 'dead', 'complete'
-let currentLevel = 0;
-let attempts = 1;
-let cameraX = 0;               // Kamera-Offset (Weltkoordinaten)
-let player, entities, levelLength, levelConfig;
-let gameSpeed = 4.5;           // Pixel pro Frame
-let frameCounter = 0;
-let deathTimer = 0;
-let progress = 0;
-let particles = [];
-let trailParticles = [];
-let bgPulse = 0;
-
-// --- Canvas Größe ---
-function resizeCanvas() {
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = canvas.parentElement.clientHeight;
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth;
+  H = window.innerHeight;
+  canvas.width = W * DPR;
+  canvas.height = H * DPR;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  if (G.stars.length === 0) G.stars = makeStars();
 }
-window.addEventListener('resize', resizeCanvas);
-setTimeout(resizeCanvas, 0);
+window.addEventListener('resize', resize);
 
-// ============================================================
-//  LEVEL-DATEN
-//  Jedes Level wird als Array von "Chunks" definiert.
-//  Objekt-Typen:
-//    'spike'    – Stachel (tödlich, am Boden)
-//    'spikeUp'  – Stachel an der Decke
-//    'block'    – Solider Block (mit Hitbox)
-//    'platform' – Schwebende Plattform
-//    'orbYellow'– Gelber Sprungring (muss im Flug gedrückt werden)
-//    'padYellow'– Gelbes Sprungpolster (auto-jump)
-//    'portalShip'– Ship-Portal
-//    'portalCube'– Cube-Portal
-//    'coin'     – Geheimmünze
-// ============================================================
+// ============ TUNING ============
+const ORBIT_RADIUS = 55;
+const ORBIT_SPEED = 2.8;
+const FLY_SPEED = 340;
+const CAPTURE_PAD = 25;
+const MIN_PLANET_DIST = 260;
+const MAX_PLANET_DIST = 400;
+const MAX_PLANET_Y_OFF = 150;
+const MAX_FLY_TIME = 3.5;
+const TRAIL_LIFETIME = 0.55;
+const PREVIEW_LENGTH = 520;
 
-function createLevelData() {
-    return [
-        // ===== LEVEL 0: STEREO MADNESS =====
-        {
-            name: 'Stereo Madness',
-            bgColor: '#1a1a3e',
-            groundColor: '#2c3e50',
-            difficulty: 1,
-            length: 3200,
-            objects: [
-                // Startbereich – einzelne Stachel
-                {type:'spike', x:400, y:GROUND_Y-30},
-                {type:'spike', x:640, y:GROUND_Y-30},
-                {type:'spike', x:880, y:GROUND_Y-30},
-                {type:'spike', x:1120, y:GROUND_Y-30},
+// ============ STATE ============
+const G = {
+  mode: 'menu',
+  score: 0,
+  best: parseInt(localStorage.getItem('orbital-best') || '0'),
+  time: 0,
+  player: null,
+  planets: [],
+  particles: [],
+  stars: [],
+  camera: { x: 0, y: 0 },
+  flash: 0,
+  shake: 0,
+  flyingTime: 0,
+};
 
-                // Doppel-Stachel
-                {type:'spike', x:1360, y:GROUND_Y-30},
-                {type:'spike', x:1360+BLOCK_SIZE, y:GROUND_Y-30},
+// ============ HELPERS ============
+const rand = (a, b) => a + Math.random() * (b - a);
+const lerp = (a, b, t) => a + (b - a) * t;
 
-                // Treppe (30% – Stereo Madness Charakteristikum)
-                {type:'block', x:1680, y:GROUND_Y-40},
-                {type:'block', x:1720, y:GROUND_Y-80},
-                {type:'block', x:1760, y:GROUND_Y-120},
-                {type:'block', x:1800, y:GROUND_Y-160},
+// ============ COLORS ============
+const PALETTE = [
+  { main: '#00e5ff', dark: '#0077aa', glow: 'rgba(0,229,255,0.75)' },
+  { main: '#ff2bb8', dark: '#aa0066', glow: 'rgba(255,43,184,0.75)' },
+  { main: '#aaff00', dark: '#669900', glow: 'rgba(170,255,0,0.75)' },
+  { main: '#ff8800', dark: '#aa4400', glow: 'rgba(255,136,0,0.75)' },
+  { main: '#aa55ff', dark: '#6600cc', glow: 'rgba(170,85,255,0.75)' },
+  { main: '#ff3344', dark: '#aa0011', glow: 'rgba(255,51,68,0.75)' },
+];
 
-                // Stachel nach der Treppe
-                {type:'spike', x:1960, y:GROUND_Y-30},
-
-                // Ship-Portal bei ~45%
-                {type:'portalShip', x:2200, y:GROUND_Y-100},
-
-                // Ship-Bereich: enge Korridore
-                {type:'block', x:2400, y:GROUND_Y-120, w:BLOCK_SIZE*3, h:BLOCK_SIZE},
-                {type:'block', x:2400, y:GROUND_Y-240, w:BLOCK_SIZE*3, h:BLOCK_SIZE},
-                {type:'block', x:2700, y:GROUND_Y-80, w:BLOCK_SIZE*2, h:BLOCK_SIZE},
-                {type:'block', x:2700, y:GROUND_Y-200, w:BLOCK_SIZE*2, h:BLOCK_SIZE},
-
-                // Zurück zu Cube
-                {type:'portalCube', x:3000, y:GROUND_Y-100},
-
-                // Endspurt
-                {type:'spike', x:3150, y:GROUND_Y-30},
-            ]
-        },
-
-        // ===== LEVEL 1: BACK ON TRACK =====
-        {
-            name: 'Back on Track',
-            bgColor: '#1a2a1e',
-            groundColor: '#2a4a2e',
-            difficulty: 2,
-            length: 3400,
-            objects: [
-                // Start mit Doppel-Stachel
-                {type:'spike', x:400, y:GROUND_Y-30},
-                {type:'spike', x:440, y:GROUND_Y-30},
-
-                // Plattformen
-                {type:'platform', x:700, y:GROUND_Y-80, w:120},
-                {type:'platform', x:900, y:GROUND_Y-120, w:100},
-
-                // Stachel auf Plattform
-                {type:'spike', x:920, y:GROUND_Y-150},
-
-                // Gelbes Sprungpolster (neu in Back on Track)
-                {type:'padYellow', x:1200, y:GROUND_Y-30},
-
-                // Nach dem Pad: höhere Plattform
-                {type:'platform', x:1300, y:GROUND_Y-180, w:120},
-                {type:'spike', x:1340, y:GROUND_Y-210},
-
-                // Ship-Portal (mehr Ship als Cube)
-                {type:'portalShip', x:1600, y:GROUND_Y-100},
-
-                // Ship-Bereich: Zickzack
-                {type:'block', x:1800, y:GROUND_Y-60, w:BLOCK_SIZE, h:BLOCK_SIZE},
-                {type:'block', x:1900, y:GROUND_Y-140, w:BLOCK_SIZE, h:BLOCK_SIZE},
-                {type:'block', x:2000, y:GROUND_Y-60, w:BLOCK_SIZE, h:BLOCK_SIZE},
-                {type:'block', x:2100, y:GROUND_Y-180, w:BLOCK_SIZE, h:BLOCK_SIZE},
-
-                // Zurück zu Cube
-                {type:'portalCube', x:2400, y:GROUND_Y-100},
-
-                // Cube: Plattform mit Stachel
-                {type:'platform', x:2550, y:GROUND_Y-60, w:100},
-                {type:'spike', x:2580, y:GROUND_Y-90},
-
-                // Endbereich: Gelbe Pads als Gefahr
-                {type:'padYellow', x:2800, y:GROUND_Y-30},
-                {type:'spike', x:2950, y:GROUND_Y-30},
-                {type:'spike', x:2990, y:GROUND_Y-30},
-
-                // Letzter Sprung
-                {type:'platform', x:3150, y:GROUND_Y-100, w:150},
-            ]
-        },
-
-        // ===== LEVEL 2: POLARGEIST =====
-        {
-            name: 'Polargeist',
-            bgColor: '#1a1a2e',
-            groundColor: '#3a2a4e',
-            difficulty: 3,
-            length: 3600,
-            objects: [
-                // Start mit einzelnen Stachel
-                {type:'spike', x:400, y:GROUND_Y-30},
-                {type:'spike', x:600, y:GROUND_Y-30},
-
-                // Gelbe Sprungringe (neu in Polargeist)
-                {type:'orbYellow', x:850, y:GROUND_Y-120},
-                {type:'orbYellow', x:1000, y:GROUND_Y-140},
-                {type:'orbYellow', x:1150, y:GROUND_Y-160},
-
-                // Grube
-                {type:'spike', x:1000, y:GROUND_Y-10},
-                {type:'spike', x:1100, y:GROUND_Y-10},
-
-                // Landeplattform
-                {type:'platform', x:1300, y:GROUND_Y-80, w:120},
-
-                // Ship-Portal bei ~34%
-                {type:'portalShip', x:1500, y:GROUND_Y-100},
-
-                // Ship: enger Zickzack-Korridor
-                {type:'block', x:1700, y:GROUND_Y-80, w:BLOCK_SIZE*2, h:BLOCK_SIZE},
-                {type:'block', x:1700, y:GROUND_Y-240, w:BLOCK_SIZE*2, h:BLOCK_SIZE},
-                {type:'block', x:1900, y:GROUND_Y-120, w:BLOCK_SIZE, h:BLOCK_SIZE},
-                {type:'block', x:1900, y:GROUND_Y-280, w:BLOCK_SIZE, h:BLOCK_SIZE},
-                {type:'block', x:2050, y:GROUND_Y-60, w:BLOCK_SIZE*2, h:BLOCK_SIZE},
-                {type:'block', x:2050, y:GROUND_Y-220, w:BLOCK_SIZE*2, h:BLOCK_SIZE},
-
-                // Zurück zu Cube bei ~47%
-                {type:'portalCube', x:2300, y:GROUND_Y-100},
-
-                // Zweite Cube-Sequenz – schwieriger
-                {type:'spike', x:2450, y:GROUND_Y-30},
-                {type:'spike', x:2500, y:GROUND_Y-30},
-
-                // Plattformen mit Stacheln
-                {type:'platform', x:2650, y:GROUND_Y-70, w:80},
-                {type:'spike', x:2670, y:GROUND_Y-100},
-                {type:'platform', x:2800, y:GROUND_Y-130, w:80},
-                {type:'spike', x:2820, y:GROUND_Y-160},
-
-                // Letzter Sprungring
-                {type:'orbYellow', x:3000, y:GROUND_Y-140},
-
-                // Endspurt: Treppe
-                {type:'block', x:3200, y:GROUND_Y-40},
-                {type:'block', x:3240, y:GROUND_Y-80},
-                {type:'block', x:3280, y:GROUND_Y-120},
-                {type:'spike', x:3400, y:GROUND_Y-30},
-            ]
-        }
-    ];
+// ============ FACTORIES ============
+function makePlanet(x, y, radius) {
+  const c = PALETTE[(Math.random() * PALETTE.length) | 0];
+  return {
+    x, y, radius, color: c,
+    rotation: Math.random() * Math.PI * 2,
+    rotationSpeed: rand(-0.5, 0.5),
+  };
 }
 
-const LEVELS = createLevelData();
-
-// ============================================================
-//  SPIELER
-// ============================================================
-function createPlayer() {
-    return {
-        x: 120,
-        y: GROUND_Y - PLAYER_SIZE,
-        width: PLAYER_SIZE,
-        height: PLAYER_SIZE,
-        vy: 0,
-        gravity: 0.9,
-        jumpForce: -11,
-        onGround: true,
-        mode: 'cube',           // 'cube' oder 'ship'
-        rotation: 0,
-        targetRotation: 0,
-        isJumping: false,
-        shipHold: false,
-        // Trail
-        trail: []
-    };
+function makePlayer(planet) {
+  return {
+    x: planet.x,
+    y: planet.y - ORBIT_RADIUS,
+    vx: 0, vy: 0,
+    mode: 'orbit',
+    planet,
+    angle: -Math.PI / 2,
+    orbitRadius: ORBIT_RADIUS,
+    trail: [],
+    radius: 9,
+  };
 }
 
-// ============================================================
-//  LEVEL LADEN
-// ============================================================
-function loadLevel(index) {
-    currentLevel = index;
-    levelConfig = LEVELS[index];
-    levelLength = levelConfig.length;
-
-    // Entities aus Level-Daten klonen
-    entities = levelConfig.objects.map(o => ({...o}));
-
-    // Spieler neu erstellen
-    player = createPlayer();
-
-    // Zustand zurücksetzen
-    cameraX = 0;
-    frameCounter = 0;
-    progress = 0;
-    particles = [];
-    trailParticles = [];
-    gameState = 'playing';
-    deathTimer = 0;
-
-    // HUD anzeigen
-    menuEl.classList.add('hidden');
-    hudEl.style.display = 'flex';
-    progressContainer.style.display = 'block';
-    backBtn.style.display = 'block';
-    deathScreen.classList.add('hidden');
-
-    updateHUD();
-}
-
-// ============================================================
-//  MENÜ
-// ============================================================
-document.querySelectorAll('.level-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const idx = parseInt(btn.dataset.level);
-        attempts = 1;
-        loadLevel(idx);
+function makeStars() {
+  const stars = [];
+  for (let i = 0; i < 130; i++) {
+    stars.push({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      size: Math.random() * 1.6 + 0.3,
+      alpha: Math.random() * 0.7 + 0.2,
+      twinkle: Math.random() * Math.PI * 2,
     });
-});
-
-backBtn.addEventListener('click', () => {
-    gameState = 'menu';
-    menuEl.classList.remove('hidden');
-    hudEl.style.display = 'none';
-    progressContainer.style.display = 'none';
-    backBtn.style.display = 'none';
-    deathScreen.classList.add('hidden');
-});
-
-// ============================================================
-//  EINGABE
-// ============================================================
-let inputPressed = false;
-
-function handleJump() {
-    if (gameState === 'dead') {
-        // Neustart
-        attempts++;
-        loadLevel(currentLevel);
-        return;
-    }
-    if (gameState !== 'playing') return;
-
-    if (player.mode === 'cube') {
-        if (player.onGround) {
-            player.vy = player.jumpForce;
-            player.onGround = false;
-            player.isJumping = true;
-            player.targetRotation = Math.PI / 2;
-        }
-    } else if (player.mode === 'ship') {
-        player.shipHold = true;
-    }
+  }
+  return stars;
 }
 
-function handleRelease() {
-    player.shipHold = false;
-    player.isJumping = false;
+function makeParticle(x, y, o = {}) {
+  const angle = o.angle !== undefined ? o.angle : Math.random() * Math.PI * 2;
+  const speed = o.speed !== undefined ? o.speed : rand(40, 180);
+  const life = o.life !== undefined ? o.life : rand(0.4, 0.9);
+  return {
+    x, y,
+    vx: Math.cos(angle) * speed,
+    vy: Math.sin(angle) * speed,
+    life, maxLife: life,
+    size: o.size || rand(1.5, 3.5),
+    color: o.color || '#fff',
+    drag: o.drag !== undefined ? o.drag : 0.93,
+    ring: o.ring || false,
+  };
 }
 
-document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' || e.code === 'ArrowUp') {
-        e.preventDefault();
-        if (!inputPressed) {
-            inputPressed = true;
-            handleJump();
-        }
-    }
-});
+// ============ SPAWNING ============
+function spawnNextPlanet() {
+  const last = G.planets[G.planets.length - 1];
+  let p;
+  if (!last) {
+    p = makePlanet(0, 0, rand(30, 42));
+  } else {
+    const d = rand(MIN_PLANET_DIST, MAX_PLANET_DIST);
+    const dy = rand(-MAX_PLANET_Y_OFF, MAX_PLANET_Y_OFF);
+    p = makePlanet(last.x + d, last.y + dy, rand(28, 42));
+  }
+  G.planets.push(p);
+  return p;
+}
 
-document.addEventListener('keyup', (e) => {
-    if (e.code === 'Space' || e.code === 'ArrowUp') {
-        inputPressed = false;
-        handleRelease();
-    }
-});
+// ============ RESET ============
+function resetGame() {
+  G.mode = 'playing';
+  G.score = 0;
+  G.time = 0;
+  G.planets = [];
+  G.particles = [];
+  G.flash = 0;
+  G.shake = 0;
+  G.flyingTime = 0;
+  G.stars = makeStars();
 
-canvas.addEventListener('pointerdown', (e) => {
+  const p = spawnNextPlanet();
+  G.player = makePlayer(p);
+  G.camera.x = p.x;
+  G.camera.y = p.y;
+
+  for (let i = 0; i < 5; i++) spawnNextPlanet();
+
+  scoreEl.textContent = '0';
+  menuEl.classList.add('hidden');
+  gameoverEl.classList.add('hidden');
+}
+
+// ============ INPUT ============
+function onTap(e) {
+  if (e) e.preventDefault();
+  if (G.mode === 'menu' || G.mode === 'gameover') {
+    resetGame();
+    return;
+  }
+  if (G.mode !== 'playing') return;
+  const p = G.player;
+  if (!p || p.mode !== 'orbit') return;
+
+  // Release: tangential velocity
+  const t = p.angle;
+  p.vx = -Math.sin(t) * FLY_SPEED;
+  p.vy = Math.cos(t) * FLY_SPEED;
+  p.mode = 'fly';
+  G.flyingTime = 0;
+
+  // Release burst
+  const dirA = Math.atan2(p.vy, p.vx) + Math.PI;
+  for (let i = 0; i < 14; i++) {
+    G.particles.push(makeParticle(p.x, p.y, {
+      angle: dirA + rand(-0.6, 0.6),
+      speed: rand(60, 220),
+      life: rand(0.3, 0.6),
+      color: '#ffffff',
+      size: rand(1.5, 3),
+    }));
+  }
+}
+
+canvas.addEventListener('pointerdown', onTap, { passive: false });
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' || e.code === 'ArrowUp') {
     e.preventDefault();
-    if (!inputPressed) {
-        inputPressed = true;
-        handleJump();
+    onTap();
+  }
+});
+
+// ============ GAME OVER ============
+function gameOver() {
+  G.mode = 'gameover';
+  G.shake = 14;
+  if (G.score > G.best) {
+    G.best = G.score;
+    localStorage.setItem('orbital-best', G.best);
+  }
+  finalScoreEl.textContent = G.score;
+  bestScoreEl.textContent = 'BEST: ' + G.best;
+  gameoverEl.classList.remove('hidden');
+
+  const p = G.player;
+  if (p) {
+    for (let i = 0; i < 44; i++) {
+      G.particles.push(makeParticle(p.x, p.y, {
+        angle: Math.random() * Math.PI * 2,
+        speed: rand(100, 420),
+        life: rand(0.6, 1.3),
+        color: i % 3 === 0 ? '#ff3366' : (i % 3 === 1 ? '#ffffff' : '#ffaa00'),
+        size: rand(2, 4.5),
+      }));
     }
-});
-
-canvas.addEventListener('pointerup', (e) => {
-    e.preventDefault();
-    inputPressed = false;
-    handleRelease();
-});
-
-canvas.addEventListener('pointercancel', (e) => {
-    inputPressed = false;
-    handleRelease();
-});
-
-// ============================================================
-//  KOLLISION (AABB)
-// ============================================================
-function rectsOverlap(a, b) {
-    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  }
 }
 
-// ============================================================
-//  UPDATE
-// ============================================================
-function update() {
-    if (gameState !== 'playing') {
-        if (gameState === 'dead') {
-            deathTimer++;
-            if (deathTimer > 30) {
-                // Automatischer Neustart nach kurzer Zeit
-                attempts++;
-                loadLevel(currentLevel);
-            }
-        }
+// ============ CAPTURE ============
+function capturePlayer(planet, dx, dy) {
+  const p = G.player;
+  p.planet = planet;
+  p.mode = 'orbit';
+  p.angle = Math.atan2(dy, dx);
+  p.orbitRadius = Math.max(Math.sqrt(dx * dx + dy * dy), planet.radius + 22);
+  p.vx = 0;
+  p.vy = 0;
+  p.trail = [];
+
+  G.score += 10;
+  scoreEl.textContent = G.score;
+  G.flash = 0.55;
+  G.shake = 6;
+
+  // Burst
+  const c = planet.color.main;
+  for (let i = 0; i < 22; i++) {
+    G.particles.push(makeParticle(p.x, p.y, {
+      angle: (i / 22) * Math.PI * 2,
+      speed: rand(80, 260),
+      life: rand(0.4, 0.85),
+      color: c,
+      size: rand(1.5, 3.5),
+    }));
+  }
+  // Expanding ring
+  G.particles.push(makeParticle(p.x, p.y, {
+    angle: 0, speed: 0, life: 0.45,
+    color: c, size: 12, ring: true, drag: 1,
+  }));
+
+  while (G.planets.length < 6) spawnNextPlanet();
+
+  // Prune old planets (keep list tight)
+  while (G.planets.length > 8 && G.planets[0] !== planet) {
+    G.planets.shift();
+  }
+}
+
+// ============ UPDATE ============
+function update(dt) {
+  G.time += dt;
+  G.flash = Math.max(0, G.flash - dt * 4);
+  G.shake = Math.max(0, G.shake - dt * 30);
+
+  if (G.mode === 'playing') {
+    updatePlayer(dt);
+    updateParticles(dt);
+    updateCamera(dt);
+  } else {
+    updateParticles(dt);
+  }
+
+  // Twinkle stars
+  for (const s of G.stars) s.twinkle += dt * 2;
+}
+
+function updatePlayer(dt) {
+  const p = G.player;
+  if (!p) return;
+
+  if (p.mode === 'orbit') {
+    p.angle += ORBIT_SPEED * dt;
+    p.orbitRadius = lerp(p.orbitRadius, ORBIT_RADIUS, Math.min(1, dt * 6));
+    p.x = p.planet.x + p.orbitRadius * Math.cos(p.angle);
+    p.y = p.planet.y + p.orbitRadius * Math.sin(p.angle);
+    p.planet.rotation += p.planet.rotationSpeed * dt;
+
+  } else if (p.mode === 'fly') {
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    G.flyingTime += dt;
+
+    // Check capture
+    for (const planet of G.planets) {
+      const dx = p.x - planet.x;
+      const dy = p.y - planet.y;
+      const d2 = dx * dx + dy * dy;
+      const capR = planet.radius + ORBIT_RADIUS + CAPTURE_PAD;
+      if (d2 < capR * capR) {
+        capturePlayer(planet, dx, dy);
         return;
+      }
     }
 
-    frameCounter++;
-    bgPulse += 0.02;
-
-    // --- Spieler-Physik ---
-    if (player.mode === 'cube') {
-        player.vy += player.gravity;
-        player.y += player.vy;
-
-        // Boden-Kollision
-        if (player.y + player.height >= GROUND_Y) {
-            player.y = GROUND_Y - player.height;
-            player.vy = 0;
-            player.onGround = true;
-            if (player.isJumping) {
-                player.targetRotation = 0;
-            }
-        } else {
-            player.onGround = false;
-        }
-
-        // Rotation
-        if (!player.onGround) {
-            player.rotation += 0.12;
-        } else {
-            // Sanft zur 0 drehen
-            player.rotation *= 0.8;
-            if (Math.abs(player.rotation) < 0.01) player.rotation = 0;
-        }
-
-        // Decke
-        if (player.y < CEILING_Y) {
-            player.y = CEILING_Y;
-            player.vy = 0;
-        }
-
-    } else if (player.mode === 'ship') {
-        // Ship-Physik: Schwerkraft sanfter, Schub bei Halten
-        if (player.shipHold) {
-            player.vy -= 0.8;
-        } else {
-            player.vy += 0.35;
-        }
-        player.vy = Math.max(-8, Math.min(8, player.vy));
-        player.y += player.vy;
-
-        // Decke und Boden
-        if (player.y < CEILING_Y) { player.y = CEILING_Y; player.vy = 0; }
-        if (player.y + player.height > GROUND_Y) {
-            player.y = GROUND_Y - player.height;
-            player.vy = 0;
-        }
-        player.rotation = player.vy * 0.05;
+    if (G.flyingTime > MAX_FLY_TIME) {
+      gameOver();
+      return;
     }
-
-    // --- Kamera ---
-    cameraX += gameSpeed;
-
-    // --- Fortschritt ---
-    progress = Math.min(100, (cameraX / levelLength) * 100);
-    updateHUD();
-
-    // --- Trail-Partikel ---
-    if (frameCounter % 2 === 0) {
-        trailParticles.push({
-            x: player.x + (player.mode === 'ship' ? 0 : player.width/2),
-            y: player.y + player.height/2,
-            life: 1,
-            size: player.mode === 'ship' ? 6 : 8,
-            color: player.mode === 'ship' ? '#5ecf7a' : '#fcc02a'
-        });
-    }
-
-    trailParticles.forEach(p => p.life -= 0.04);
-    trailParticles = trailParticles.filter(p => p.life > 0);
-
-    // --- Entities aktualisieren ---
-    entities.forEach(e => {
-        // Sichtbarkeit: nur im Kamera-Bereich zeichnen
-        e.screenX = e.x - cameraX;
-    });
-
-    // --- Kollisionen prüfen ---
-    const playerRect = {
-        x: player.x,
-        y: player.y,
-        w: player.width,
-        h: player.height
-    };
-
-    for (let e of entities) {
-        if (e.screenX < -200 || e.screenX > canvas.width + 200) continue;
-
-        const ex = e.x - cameraX;
-        let rect;
-
-        // Kollisionsbox je nach Typ
-        switch(e.type) {
-            case 'spike':
-                rect = { x: ex + 8, y: e.y + 8, w: BLOCK_SIZE - 16, h: 30 };
-                break;
-            case 'spikeUp':
-                rect = { x: ex + 8, y: e.y, w: BLOCK_SIZE - 16, h: 30 };
-                break;
-            case 'block':
-                rect = { x: ex, y: e.y, w: e.w || BLOCK_SIZE, h: e.h || BLOCK_SIZE };
-                break;
-            case 'platform':
-                rect = { x: ex, y: e.y, w: e.w || BLOCK_SIZE, h: 12 };
-                break;
-            case 'orbYellow':
-                // Orb-Kollision (Kreis)
-                const orbCX = ex + 20;
-                const orbCY = e.y + 20;
-                const orbR = 28;
-                const dx = (player.x + player.width/2) - orbCX;
-                const dy = (player.y + player.height/2) - orbCY;
-                if (Math.sqrt(dx*dx + dy*dy) < orbR + 15) {
-                    if (inputPressed) {
-                        player.vy = -12;
-                        player.onGround = false;
-                        // Orb-Partikel
-                        for (let i = 0; i < 8; i++) {
-                            particles.push({
-                                x: orbCX, y: orbCY,
-                                vx: (Math.random() - 0.5) * 8,
-                                vy: (Math.random() - 0.5) * 8,
-                                life: 0.8,
-                                color: '#fcc02a',
-                                size: 4
-                            });
-                        }
-                    }
-                }
-                continue; // Orb hat keine Standard-Kollision
-            case 'padYellow':
-                rect = { x: ex, y: e.y + 20, w: BLOCK_SIZE, h: 20 };
-                if (rectsOverlap(playerRect, rect)) {
-                    player.vy = -16;
-                    player.onGround = false;
-                    for (let i = 0; i < 10; i++) {
-                        particles.push({
-                            x: ex + 20, y: e.y + 30,
-                            vx: (Math.random() - 0.5) * 6,
-                            vy: -Math.random() * 8,
-                            life: 0.7,
-                            color: '#fcc02a',
-                            size: 5
-                        });
-                    }
-                }
-                continue;
-            case 'portalShip':
-                rect = { x: ex + 10, y: e.y, w: 20, h: 80 };
-                if (rectsOverlap(playerRect, rect)) {
-                    player.mode = 'ship';
-                    player.vy = 0;
-                }
-                continue;
-            case 'portalCube':
-                rect = { x: ex + 10, y: e.y, w: 20, h: 80 };
-                if (rectsOverlap(playerRect, rect)) {
-                    player.mode = 'cube';
-                    player.vy = 0;
-                }
-                continue;
-            case 'coin':
-                // Geheimmünzen (optional)
-                continue;
-        }
-
-        if (rect && rectsOverlap(playerRect, rect)) {
-            if (e.type === 'spike' || e.type === 'spikeUp') {
-                die();
-            } else if (e.type === 'block' || e.type === 'platform') {
-                // Bei Block-Kollision: prüfen ob von oben oder Seite
-                const prevY = player.y - player.vy;
-                if (prevY + player.height <= rect.y + 5) {
-                    // Von oben gelandet
-                    player.y = rect.y - player.height;
-                    player.vy = 0;
-                    player.onGround = true;
-                } else if (player.vy < 0 && prevY >= rect.y + rect.h - 5) {
-                    // Von unten
-                    player.y = rect.y + rect.h;
-                    player.vy = 0;
-                } else {
-                    // Seite
-                    die();
-                }
-            }
-        }
-    }
-
-    // Boden-Kollision (fest)
-    if (player.y + player.height > GROUND_Y) {
-        player.y = GROUND_Y - player.height;
-        player.vy = 0;
-        player.onGround = true;
-    }
-
-    // Level-Ende erreicht?
-    if (cameraX >= levelLength) {
-        gameState = 'complete';
-        progress = 100;
-        updateHUD();
-        deathScreen.classList.remove('hidden');
-        deathScreen.querySelector('.text').textContent = '🏆 Level geschafft!';
-        deathScreen.querySelector('.sub').textContent = 'Klicke für Menü';
-        deathScreen.style.background = 'rgba(0, 100, 0, 0.3)';
-        // Klick zum Menü
-        const goMenu = () => {
-            deathScreen.classList.add('hidden');
-            gameState = 'menu';
-            menuEl.classList.remove('hidden');
-            hudEl.style.display = 'none';
-            progressContainer.style.display = 'none';
-            backBtn.style.display = 'none';
-            deathScreen.removeEventListener('click', goMenu);
-        };
-        deathScreen.addEventListener('click', goMenu);
-    }
-
-    // Partikel
-    particles.forEach(p => {
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vy += 0.2;
-        p.life -= 0.03;
-    });
-    particles = particles.filter(p => p.life > 0);
-}
-
-function die() {
-    if (gameState !== 'playing') return;
-    gameState = 'dead';
-    deathTimer = 0;
-    deathScreen.classList.remove('hidden');
-    deathScreen.style.background = 'rgba(200, 0, 0, 0.3)';
-    deathScreen.querySelector('.text').textContent = '💀 Game Over';
-    deathScreen.querySelector('.sub').textContent = 'Versuch ' + attempts + ' – Klicke zum Neustart';
-
-    // Todes-Partikel
-    for (let i = 0; i < 25; i++) {
-        particles.push({
-            x: player.x + player.width/2,
-            y: player.y + player.height/2,
-            vx: (Math.random() - 0.5) * 12,
-            vy: (Math.random() - 0.5) * 12 - 3,
-            life: 1,
-            color: i % 3 === 0 ? '#ef4444' : (i % 3 === 1 ? '#fcc02a' : '#ffffff'),
-            size: Math.random() * 5 + 3
-        });
-    }
-}
-
-function updateHUD() {
-    attemptsEl.textContent = 'Versuch: ' + attempts;
-    percentageEl.textContent = Math.round(progress) + '%';
-    progressBar.style.width = progress + '%';
-}
-
-// ============================================================
-//  RENDERING
-// ============================================================
-function draw() {
-    if (gameState === 'menu') {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        return;
-    }
-
-    // Hintergrund
-    const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    grad.addColorStop(0, levelConfig.bgColor);
-    grad.addColorStop(1, '#0f0f1a');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Pulsierender Hintergrund-Effekt
-    const pulseAlpha = 0.03 + Math.sin(bgPulse) * 0.02;
-    ctx.fillStyle = `rgba(94, 207, 122, ${pulseAlpha})`;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // --- Boden ---
-    ctx.fillStyle = levelConfig.groundColor || '#2c3e50';
-    ctx.fillRect(0, GROUND_Y, canvas.width, canvas.height - GROUND_Y);
-
-    // Boden-Linie (leuchtend)
-    ctx.strokeStyle = '#5ecf7a';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(0, GROUND_Y);
-    ctx.lineTo(canvas.width, GROUND_Y);
-    ctx.stroke();
-
-    // Boden-Gitter
-    ctx.strokeStyle = 'rgba(94, 207, 122, 0.1)';
-    ctx.lineWidth = 1;
-    for (let x = -(cameraX % 40); x < canvas.width; x += 40) {
-        ctx.beginPath();
-        ctx.moveTo(x, GROUND_Y);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-    }
-
-    // --- Entities zeichnen ---
-    entities.forEach(e => {
-        const ex = e.x - cameraX;
-        if (ex < -100 || ex > canvas.width + 100) return;
-
-        switch(e.type) {
-            case 'spike':
-                drawSpike(ex, e.y);
-                break;
-            case 'spikeUp':
-                drawSpikeUp(ex, e.y);
-                break;
-            case 'block':
-                drawBlock(ex, e.y, e.w || BLOCK_SIZE, e.h || BLOCK_SIZE);
-                break;
-            case 'platform':
-                drawPlatform(ex, e.y, e.w || BLOCK_SIZE);
-                break;
-            case 'orbYellow':
-                drawOrb(ex, e.y);
-                break;
-            case 'padYellow':
-                drawPad(ex, e.y);
-                break;
-            case 'portalShip':
-                drawPortal(ex, e.y, '#5ecf7a', 'S');
-                break;
-            case 'portalCube':
-                drawPortal(ex, e.y, '#fcc02a', 'C');
-                break;
-        }
-    });
-
-    // --- Trail-Partikel ---
-    trailParticles.forEach(p => {
-        ctx.globalAlpha = p.life * 0.6;
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
-        ctx.fill();
-    });
-    ctx.globalAlpha = 1;
-
-    // --- Explosions-Partikel ---
-    particles.forEach(p => {
-        ctx.globalAlpha = p.life;
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
-        ctx.fill();
-    });
-    ctx.globalAlpha = 1;
-
-    // --- Spieler zeichnen ---
-    drawPlayer();
-
-    // --- Decke (unsichtbare Barriere, aber visuell dezent) ---
-    ctx.fillStyle = 'rgba(255,255,255,0.02)';
-    ctx.fillRect(0, 0, canvas.width, 4);
-}
-
-function drawSpike(x, y) {
-    ctx.fillStyle = '#ef4444';
-    ctx.beginPath();
-    ctx.moveTo(x + BLOCK_SIZE/2, y);
-    ctx.lineTo(x + BLOCK_SIZE, y + BLOCK_SIZE);
-    ctx.lineTo(x, y + BLOCK_SIZE);
-    ctx.closePath();
-    ctx.fill();
-    // Glow
-    ctx.shadowColor = '#ef4444';
-    ctx.shadowBlur = 10;
-    ctx.fill();
-    ctx.shadowBlur = 0;
-}
-
-function drawSpikeUp(x, y) {
-    ctx.fillStyle = '#ef4444';
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + BLOCK_SIZE, y);
-    ctx.lineTo(x + BLOCK_SIZE/2, y + BLOCK_SIZE);
-    ctx.closePath();
-    ctx.fill();
-    ctx.shadowColor = '#ef4444';
-    ctx.shadowBlur = 10;
-    ctx.fill();
-    ctx.shadowBlur = 0;
-}
-
-function drawBlock(x, y, w, h) {
-    ctx.fillStyle = '#4b5563';
-    ctx.beginPath();
-    ctx.roundRect(x, y, w, h, 4);
-    ctx.fill();
-    // Highlight
-    ctx.fillStyle = 'rgba(255,255,255,0.1)';
-    ctx.beginPath();
-    ctx.roundRect(x + 2, y + 2, w - 4, h/2 - 2, 3);
-    ctx.fill();
-    // Border
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.roundRect(x, y, w, h, 4);
-    ctx.stroke();
-}
-
-function drawPlatform(x, y, w) {
-    ctx.fillStyle = '#6b7280';
-    ctx.beginPath();
-    ctx.roundRect(x, y, w, 12, 3);
-    ctx.fill();
-    ctx.fillStyle = 'rgba(94, 207, 122, 0.3)';
-    ctx.fillRect(x, y + 10, w, 3);
-}
-
-function drawOrb(x, y) {
-    // Äußerer Ring
-    ctx.strokeStyle = '#fcc02a';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(x + 20, y + 20, 18, 0, Math.PI * 2);
-    ctx.stroke();
-    // Innerer Ring
-    ctx.strokeStyle = 'rgba(252, 192, 42, 0.5)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(x + 20, y + 20, 10, 0, Math.PI * 2);
-    ctx.stroke();
-    // Glow
-    ctx.shadowColor = '#fcc02a';
-    ctx.shadowBlur = 15;
-    ctx.beginPath();
-    ctx.arc(x + 20, y + 20, 6, 0, Math.PI * 2);
-    ctx.fillStyle = '#fcc02a';
-    ctx.fill();
-    ctx.shadowBlur = 0;
-}
-
-function drawPad(x, y) {
-    ctx.fillStyle = '#fcc02a';
-    ctx.beginPath();
-    ctx.roundRect(x + 5, y + 25, 30, 10, 5);
-    ctx.fill();
-    ctx.shadowColor = '#fcc02a';
-    ctx.shadowBlur = 15;
-    ctx.fill();
-    ctx.shadowBlur = 0;
-}
-
-function drawPortal(x, y, color, letter) {
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.ellipse(x + 20, y + 40, 15, 40, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.fillStyle = color;
-    ctx.font = 'bold 16px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(letter, x + 20, y + 46);
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 15;
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-}
-
-function drawPlayer() {
-    ctx.save();
-    ctx.translate(player.x + player.width/2, player.y + player.height/2);
-    ctx.rotate(player.rotation);
-
-    if (player.mode === 'cube') {
-        // Cube
-        ctx.fillStyle = '#fcc02a';
-        ctx.beginPath();
-        ctx.roundRect(-player.width/2, -player.height/2, player.width, player.height, 6);
-        ctx.fill();
-
-        // Gesicht / Inneres Quadrat
-        ctx.fillStyle = 'rgba(255,255,255,0.3)';
-        ctx.beginPath();
-        ctx.roundRect(-player.width/2 + 6, -player.height/2 + 6, player.width - 12, player.height - 12, 4);
-        ctx.fill();
-
-        // Augen
-        ctx.fillStyle = '#111827';
-        ctx.beginPath();
-        ctx.arc(-5, -3, 4, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(5, -3, 4, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Glow
-        ctx.shadowColor = '#fcc02a';
-        ctx.shadowBlur = 20;
-        ctx.beginPath();
-        ctx.roundRect(-player.width/2, -player.height/2, player.width, player.height, 6);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-
-    } else {
-        // Ship (Dreieck-Form)
-        ctx.fillStyle = '#5ecf7a';
-        ctx.beginPath();
-        ctx.moveTo(-player.width/2, 0);
-        ctx.lineTo(player.width/2, -player.height/2);
-        ctx.lineTo(player.width/2, player.height/2);
-        ctx.closePath();
-        ctx.fill();
-
-        // Cockpit
-        ctx.fillStyle = 'rgba(255,255,255,0.3)';
-        ctx.beginPath();
-        ctx.arc(-2, 0, 6, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Glow
-        ctx.shadowColor = '#5ecf7a';
-        ctx.shadowBlur = 20;
-        ctx.beginPath();
-        ctx.moveTo(-player.width/2, 0);
-        ctx.lineTo(player.width/2, -player.height/2);
-        ctx.lineTo(player.width/2, player.height/2);
-        ctx.closePath();
-        ctx.fill();
-        ctx.shadowBlur = 0;
-    }
-
-    ctx.restore();
 
     // Trail
-    if (player.mode === 'ship') {
-        ctx.fillStyle = 'rgba(94, 207, 122, 0.3)';
-        ctx.beginPath();
-        ctx.moveTo(player.x, player.y + player.height/2);
-        ctx.lineTo(player.x - 30, player.y + player.height/2 - 8);
-        ctx.lineTo(player.x - 30, player.y + player.height/2 + 8);
-        ctx.closePath();
-        ctx.fill();
+    p.trail.push({ x: p.x, y: p.y, t: 0 });
+    for (const tr of p.trail) tr.t += dt;
+    p.trail = p.trail.filter(tr => tr.t < TRAIL_LIFETIME);
+
+    // Trail sparks
+    if (Math.random() < 0.65) {
+      G.particles.push(makeParticle(p.x, p.y, {
+        angle: Math.atan2(-p.vy, -p.vx) + rand(-0.5, 0.5),
+        speed: rand(20, 80),
+        life: rand(0.3, 0.7),
+        color: '#ffee88',
+        size: rand(1, 2.5),
+      }));
     }
+  }
 }
 
-// ============================================================
-//  HAUPTSCHLEIFE
-// ============================================================
-function gameLoop() {
-    update();
-    draw();
-    requestAnimationFrame(gameLoop);
+function updateParticles(dt) {
+  for (const pt of G.particles) {
+    pt.x += pt.vx * dt;
+    pt.y += pt.vy * dt;
+    pt.vx *= Math.pow(pt.drag, dt * 60);
+    pt.vy *= Math.pow(pt.drag, dt * 60);
+    pt.life -= dt;
+    if (pt.ring) pt.size += dt * 220;
+  }
+  G.particles = G.particles.filter(p => p.life > 0);
 }
 
-// ============================================================
-//  START
-// ============================================================
-resizeCanvas();
-gameLoop();
+function updateCamera(dt) {
+  const p = G.player;
+  if (!p) return;
+  const smooth = 1 - Math.pow(0.008, dt);
+  G.camera.x = lerp(G.camera.x, p.x, smooth);
+  G.camera.y = lerp(G.camera.y, p.y, smooth);
+}
+
+// ============ RENDER ============
+function w2s(wx, wy) {
+  return { x: wx - G.camera.x + W / 2, y: wy - G.camera.y + H / 2 };
+}
+
+function render() {
+  ctx.save();
+
+  // Screen shake
+  if (G.shake > 0.1) {
+    ctx.translate(rand(-G.shake, G.shake), rand(-G.shake, G.shake));
+  }
+
+  // Background
+  const bg = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.85);
+  bg.addColorStop(0, '#0d1424');
+  bg.addColorStop(1, '#050810');
+  ctx.fillStyle = bg;
+  ctx.fillRect(-30, -30, W + 60, H + 60);
+
+  // Stars
+  for (const s of G.stars) {
+    const tw = 0.7 + Math.sin(s.twinkle) * 0.3;
+    ctx.globalAlpha = s.alpha * tw;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Planets
+  for (const planet of G.planets) drawPlanet(planet);
+
+  // Particles
+  for (const pt of G.particles) {
+    const sp = w2s(pt.x, pt.y);
+    const a = Math.max(0, pt.life / pt.maxLife);
+    ctx.globalAlpha = a;
+    if (pt.ring) {
+      ctx.strokeStyle = pt.color;
+      ctx.lineWidth = 3 * a;
+      ctx.beginPath();
+      ctx.arc(sp.x, sp.y, pt.size, 0, Math.PI * 2);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = pt.color;
+      ctx.beginPath();
+      ctx.arc(sp.x, sp.y, pt.size * a, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1;
+
+  // Player
+  if (G.player) drawPlayer(G.player);
+
+  // Flash
+  if (G.flash > 0) {
+    ctx.fillStyle = `rgba(255,255,255,${G.flash * 0.4})`;
+    ctx.fillRect(-60, -60, W + 120, H + 120);
+  }
+
+  ctx.restore();
+}
+
+function drawPlanet(planet) {
+  const sp = w2s(planet.x, planet.y);
+  const r = planet.radius;
+  if (sp.x < -r * 3 - 100 || sp.x > W + r * 3 + 100 ||
+      sp.y < -r * 3 - 100 || sp.y > H + r * 3 + 100) return;
+
+  // Outer glow
+  const grd = ctx.createRadialGradient(sp.x, sp.y, r * 0.6, sp.x, sp.y, r * 3.2);
+  grd.addColorStop(0, planet.color.glow);
+  grd.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = grd;
+  ctx.beginPath();
+  ctx.arc(sp.x, sp.y, r * 3.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Body
+  const body = ctx.createRadialGradient(
+    sp.x - r * 0.3, sp.y - r * 0.35, r * 0.1,
+    sp.x, sp.y, r
+  );
+  body.addColorStop(0, planet.color.main);
+  body.addColorStop(1, planet.color.dark);
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.arc(sp.x, sp.y, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Rotating decoration
+  ctx.save();
+  ctx.translate(sp.x, sp.y);
+  ctx.rotate(planet.rotation);
+  ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.6, 0, Math.PI * 1.35);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.35, Math.PI, Math.PI * 2.15);
+  ctx.stroke();
+  ctx.restore();
+
+  // Orbit ring if current planet
+  if (G.player && G.player.mode === 'orbit' && G.player.planet === planet) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 7]);
+    ctx.beginPath();
+    ctx.arc(sp.x, sp.y, ORBIT_RADIUS, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+function drawPlayer(p) {
+  const sp = w2s(p.x, p.y);
+
+  // Trail
+  for (const tr of p.trail) {
+    const a = 1 - tr.t / TRAIL_LIFETIME;
+    const s = w2s(tr.x, tr.y);
+    ctx.globalAlpha = a * 0.55;
+    ctx.fillStyle = '#ffee88';
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, p.radius * a * 0.9, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Glow
+  const glow = ctx.createRadialGradient(sp.x, sp.y, 0, sp.x, sp.y, p.radius * 4.5);
+  glow.addColorStop(0, 'rgba(255,255,200,0.8)');
+  glow.addColorStop(1, 'rgba(255,255,200,0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(sp.x, sp.y, p.radius * 4.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Body
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(sp.x, sp.y, p.radius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffee88';
+  ctx.beginPath();
+  ctx.arc(sp.x, sp.y, p.radius * 0.55, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Trajectory preview
+  if (p.mode === 'orbit') {
+    const t = p.angle;
+    const dirX = -Math.sin(t);
+    const dirY = Math.cos(t);
+    const s = w2s(p.x, p.y);
+    const e = w2s(p.x + dirX * PREVIEW_LENGTH, p.y + dirY * PREVIEW_LENGTH);
+
+    // Dashed line
+    ctx.strokeStyle = 'rgba(255,255,255,0.42)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([7, 9]);
+    ctx.beginPath();
+    ctx.moveTo(s.x, s.y);
+    ctx.lineTo(e.x, e.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Arrow
+    const ang = Math.atan2(e.y - s.y, e.x - s.x);
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(e.x, e.y);
+    ctx.lineTo(e.x - Math.cos(ang - 0.4) * 16, e.y - Math.sin(ang - 0.4) * 16);
+    ctx.moveTo(e.x, e.y);
+    ctx.lineTo(e.x - Math.cos(ang + 0.4) * 16, e.y - Math.sin(ang + 0.4) * 16);
+    ctx.stroke();
+  }
+}
+
+// ============ LOOP ============
+let lastTime = performance.now();
+function loop(now) {
+  const dt = Math.min((now - lastTime) / 1000, 0.05);
+  lastTime = now;
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+
+// ============ START ============
+resize();
+G.stars = makeStars();
+requestAnimationFrame(loop);
+
+})();
 </script>
 </body>
 </html>
