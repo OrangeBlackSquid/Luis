@@ -134,15 +134,22 @@
         }
         .btn-edit:hover { background-color: #2980b9; }
 
-        /* Der SICHTBARE Login-Button oben rechts */
+        /* Der UNSICHTBARE Login-Button oben rechts */
         #adminTrigger {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 8px 16px;
-            font-size: 14px;
+            top: 0;
+            right: 0;
+            width: 60px;
+            height: 60px;
             z-index: 9999;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: transparent; /* Text unsichtbar machen */
+        }
+        /* Entfernt den Hover-Effekt für den unsichtbaren Button */
+        #adminTrigger:hover {
+            background: transparent;
         }
 
         /* NEU: Modal (Fenster) für Generelle Informationen */
@@ -207,14 +214,14 @@
 </head>
 <body>
 
-    <!-- Sichtbarer Login-Button oben rechts -->
+    <!-- UNSICHTBARER Login-Button oben rechts -->
     <button id="adminTrigger" onclick="handleAdminAuth()">Login</button>
 
     <h1>Luis</h1>
     <h2>APB System</h2>
 
-    <!-- NEU: Button für Generelle Informationen -->
-    <button onclick="openInfoModal()" style="margin-bottom: 25px; background-color: #3498db; color: white;">Generelle Informationen</button>
+    <!-- Button für Generelle Informationen (Jetzt im Standard-Orange) -->
+    <button onclick="openInfoModal()" style="margin-bottom: 25px; width: 100%; max-width: 500px;">Generelle Informationen</button>
 
     <div class="input-container">
         <input type="text" id="noteInput" placeholder="Notiz eingeben (z.B. Test)...">
@@ -225,7 +232,7 @@
         <!-- Hier werden die Notizen automatisch eingefügt -->
     </div>
 
-    <!-- NEU: Das Modal (Fenster) für die Informationen -->
+    <!-- Das Modal (Fenster) für die Informationen -->
     <div id="infoModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeInfoModal()">&times;</span>
@@ -238,7 +245,6 @@
     <!-- Firebase SDK laden -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        // 'set' wurde hinzugefügt, um die Infos zu speichern
         import { getDatabase, ref, push, onValue, remove, update, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         // ==========================================
@@ -259,12 +265,12 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const notesRef = ref(db, 'apb_notes');
-        const infoRef = ref(db, 'apb_info'); // NEU: Referenz für die allgemeinen Infos
+        const infoRef = ref(db, 'apb_info'); 
 
         const notesContainer = document.getElementById('notesContainer');
         
         // Admin Status und Passwort
-        const ADMIN_CODE = "Platzhalter123"; 
+        const ADMIN_CODE = "DLQ33"; 
         let isAdmin = localStorage.getItem('isAPBAdmin') === 'true';
 
         // ==========================================
@@ -295,29 +301,24 @@
         }
 
         // ==========================================
-        // NEU: LOGIK FÜR GENERelle INFORMATIONEN
+        // LOGIK FÜR GENERELLE INFORMATIONEN
         // ==========================================
         
-        // Modal öffnen
         window.openInfoModal = function() {
             document.getElementById('infoModal').style.display = 'block';
         }
 
-        // Modal schließen
         window.closeInfoModal = function() {
             document.getElementById('infoModal').style.display = 'none';
         }
 
-        // Infos aus der Datenbank laden und anzeigen
         onValue(infoRef, (snapshot) => {
             const infoTextArea = document.getElementById('infoText');
             const saveBtn = document.getElementById('saveInfoBtn');
             const data = snapshot.val();
 
-            // Text setzen (falls leer, Standardtext anzeigen)
             infoTextArea.value = data || "";
 
-            // Admin-Rechte prüfen und Textbox entsprechend anpassen
             if (isAdmin) {
                 infoTextArea.removeAttribute('readonly');
                 infoTextArea.placeholder = "Hier kannst du Informationen für alle eintragen...";
@@ -329,7 +330,6 @@
             }
         });
 
-        // Infos speichern (nur für Admins)
         window.saveInfo = function() {
             if (!isAdmin) return;
             const text = document.getElementById('infoText').value;
