@@ -2,9 +2,8 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <!-- Wichtig für Mobile: Verhindert das automatische Zoomen und sorgt für die richtige Skalierung -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Physik Sandbox Mobile</title>
+    <title>Physik Sandbox Deluxe</title>
     <style>
         /* --- CSS (Design & Layout) --- */
         * {
@@ -12,15 +11,15 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Arial', sans-serif;
-            -webkit-tap-highlight-color: transparent; /* Entfernt blaues Aufblitzen beim Tippen auf dem Handy */
+            -webkit-tap-highlight-color: transparent;
         }
 
         html, body {
             width: 100%;
             height: 100%;
-            overflow: hidden; /* Verhindert Scrollen der Seite */
+            overflow: hidden;
             background-color: #1a2233;
-            touch-action: none; /* Verhindert Zoom und Scroll-Gesten */
+            touch-action: none; /* Verhindert Scrollen/Zoomen auf dem Handy */
         }
 
         #game-container {
@@ -31,7 +30,6 @@
             background-color: #111827;
         }
 
-        /* Gitter-Hintergrund für den Sandbox-Look */
         canvas {
             display: block;
             width: 100%;
@@ -43,7 +41,7 @@
             background-size: 40px 40px;
         }
 
-        /* UI Panel - Am unteren Rand für Mobile optimiert */
+        /* UI Panel - Mobile Optimiert */
         #ui-panel {
             position: absolute;
             bottom: 0;
@@ -57,17 +55,14 @@
             flex-direction: column;
             gap: 8px;
             z-index: 100;
-            max-height: 45vh; /* Falls es zu viel wird, kann man es scrollen */
-            overflow-y: auto;
         }
 
-        /* Auf größeren Bildschirmen (Desktop) sieht es wieder wie ein schwebendes Panel aus */
         @media (min-width: 768px) {
             #ui-panel {
                 top: 20px;
                 left: 20px;
                 bottom: auto;
-                width: 280px;
+                width: 320px;
                 border-radius: 12px;
                 border: 1px solid rgba(255, 255, 255, 0.1);
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -83,24 +78,22 @@
         }
 
         .tool-grid {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
             gap: 6px;
-            justify-content: center;
         }
 
         button {
-            flex: 1 1 calc(33.333% - 6px);
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
-            padding: 8px 4px;
+            padding: 8px 2px;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.1s;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
-            white-space: nowrap;
+            text-align: center;
         }
 
         button.active {
@@ -109,10 +102,13 @@
             border-color: #5ecf7a;
         }
 
-        button#btn-bomb.active { background: #ef4444; border-color: #ef4444; color: white; }
-        button#btn-heavy.active { background: #9ca3af; border-color: #9ca3af; color: #111827; }
-        button#btn-ball.active { background: #fcc02a; border-color: #fcc02a; color: #111827; }
-        button#btn-eraser.active { background: #ff7f50; border-color: #ff7f50; color: white; }
+        /* Farben für die aktiven Buttons passend zum Material */
+        button#btn-wood.active { background: #8B4513; color: white; border-color: #8B4513; }
+        button#btn-stone.active { background: #6b7280; color: white; border-color: #6b7280; }
+        button#btn-metal.active { background: #00bcd4; color: #111827; border-color: #00bcd4; }
+        button#btn-ball.active { background: #fcc02a; color: #111827; border-color: #fcc02a; }
+        button#btn-bomb.active { background: #ef4444; color: white; border-color: #ef4444; }
+        button#btn-eraser.active { background: #ff7f50; color: white; border-color: #ff7f50; }
 
         .sliders {
             display: flex;
@@ -141,6 +137,7 @@
             border-color: #ef4444;
             color: #ef4444;
             margin-top: 4px;
+            grid-column: span 4;
         }
 
         #clear-btn:hover, #clear-btn:active {
@@ -156,13 +153,15 @@
 
         <div id="ui-panel">
             <div>
-                <h2>Werkzeuge</h2>
+                <h2>Materialien</h2>
                 <div class="tool-grid">
-                    <button id="btn-block" class="active">Block</button>
+                    <button id="btn-wood" class="active">Holz</button>
+                    <button id="btn-stone">Stein</button>
+                    <button id="btn-metal">Metall</button>
                     <button id="btn-ball">Ball</button>
-                    <button id="btn-heavy">Schwer</button>
                     <button id="btn-bomb">Bombe</button>
-                    <button id="btn-eraser" style="flex: 1 1 100%;">Radiergummi</button>
+                    <button id="btn-eraser">Radierer</button>
+                    <button id="clear-btn">Alles löschen</button>
                 </div>
             </div>
 
@@ -179,8 +178,6 @@
                     </div>
                 </div>
             </div>
-
-            <button id="clear-btn">Alles löschen</button>
         </div>
     </div>
 
@@ -188,34 +185,33 @@
         /* --- JavaScript (Physik-Engine & Sandbox Logik) --- */
         const canvas = document.getElementById('sandboxCanvas');
         const ctx = canvas.getContext('2d');
+        const GROUND_HEIGHT = 40; // Höhe des sichtbaren Bodens
 
-        // Canvas Größe an Container anpassen (Wichtig für Mobile)
         function resizeCanvas() {
             canvas.width = canvas.parentElement.clientWidth;
             canvas.height = canvas.parentElement.clientHeight;
         }
         window.addEventListener('resize', resizeCanvas);
-        // Initiale Größe setzen
         setTimeout(resizeCanvas, 0);
 
-        // Globale Variablen
         let entities = [];
         let particles = [];
+        let shockwaves = [];
         let gravity = 0.5;
         let globalBounce = 0.3;
-        let currentTool = 'block';
+        let currentTool = 'wood';
         
-        // Variablen für die Wisch-Steuerung
+        // Für die flüssige Wisch-Steuerung
         let isDrawing = false;
         let lastSpawnX = 0;
         let lastSpawnY = 0;
-        const SPAWN_DISTANCE = 35; // Mindestabstand zwischen Objekten beim Wischen
+        const BRUSH_SPACING = 15; // Abstand zwischen den Objekten beim Wischen (kleiner = flüssiger)
 
-        // UI Elemente
         const buttons = {
-            block: document.getElementById('btn-block'),
+            wood: document.getElementById('btn-wood'),
+            stone: document.getElementById('btn-stone'),
+            metal: document.getElementById('btn-metal'),
             ball: document.getElementById('btn-ball'),
-            heavy: document.getElementById('btn-heavy'),
             bomb: document.getElementById('btn-bomb'),
             eraser: document.getElementById('btn-eraser')
         };
@@ -223,7 +219,6 @@
         const bounceSlider = document.getElementById('bounce-slider');
         const clearBtn = document.getElementById('clear-btn');
 
-        // UI Event Listeners
         Object.keys(buttons).forEach(key => {
             buttons[key].addEventListener('click', () => {
                 Object.values(buttons).forEach(b => b.classList.remove('active'));
@@ -245,12 +240,11 @@
         clearBtn.addEventListener('click', () => {
             entities = [];
             particles = [];
+            shockwaves = [];
         });
 
-        // --- KOORDINATEN BERECHNUNG (Wichtig für Mobile Skalierung) ---
         function getPointerPos(e) {
             const rect = canvas.getBoundingClientRect();
-            // Skalierung berechnen (falls das Canvas durch CSS verkleinert/vergrößert wird)
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
             return {
@@ -259,9 +253,9 @@
             };
         }
 
-        // --- POINTER EVENTS (Maus & Touch vereint) ---
+        // --- POINTER EVENTS (Maus & Touch) ---
         canvas.addEventListener('pointerdown', (e) => {
-            e.preventDefault(); // Verhindert Standard-Touch-Verhalten
+            e.preventDefault();
             isDrawing = true;
             const pos = getPointerPos(e);
             
@@ -283,16 +277,25 @@
             if (currentTool === 'eraser') {
                 eraseAt(pos.x, pos.y);
             } else {
-                // Berechne die Distanz zum zuletzt platzierten Objekt
+                // SMOOTHE PLATZIERUNG: Interpolation zwischen letzter und aktueller Position
                 const dx = pos.x - lastSpawnX;
                 const dy = pos.y - lastSpawnY;
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 
-                // Wenn weit genug gewischt wurde, platziere ein neues Objekt
-                if (dist > SPAWN_DISTANCE) {
-                    spawnEntity(pos.x, pos.y);
-                    lastSpawnX = pos.x;
-                    lastSpawnY = pos.y;
+                if (dist > 0) {
+                    const steps = Math.floor(dist / BRUSH_SPACING);
+                    for (let i = 1; i <= steps; i++) {
+                        const t = i / steps;
+                        const ix = lastSpawnX + dx * t;
+                        const iy = lastSpawnY + dy * t;
+                        spawnEntity(ix, iy);
+                    }
+                    
+                    // Position aktualisieren, damit die nächste Bewegung nahtlos anschließt
+                    if (steps > 0) {
+                        lastSpawnX = pos.x;
+                        lastSpawnY = pos.y;
+                    }
                 }
             }
         });
@@ -302,17 +305,12 @@
             isDrawing = false;
         });
         
-        // Falls der Finger den Bildschirm verlässt oder die Berührung abgebrochen wird
         canvas.addEventListener('pointercancel', (e) => {
             e.preventDefault();
             isDrawing = false;
         });
-        
-        canvas.addEventListener('pointerleave', () => {
-            isDrawing = false;
-        });
 
-        // --- ENTITY KLASSE ---
+        // --- ENTITY KLASSE (Materialien) ---
         class Entity {
             constructor(x, y, type) {
                 this.x = x;
@@ -323,28 +321,46 @@
                 this.isDead = false;
 
                 // Standardwerte
-                this.w = 50;
-                this.h = 50;
+                this.w = 40;
+                this.h = 40;
                 this.mass = 1;
-                this.color = '#5ecf7a';
                 this.restitution = globalBounce;
+                this.destroyable = true; // Kann von Bomben zerstört werden?
 
-                // Typ-spezifische Anpassungen
-                if (type === 'ball') {
-                    this.w = 35; this.h = 35;
-                    this.color = '#fcc02a';
-                    this.restitution = Math.max(globalBounce, 0.7);
-                    this.mass = 0.8;
-                } else if (type === 'heavy') {
-                    this.w = 60; this.h = 60;
-                    this.color = '#9ca3af';
-                    this.restitution = Math.min(globalBounce, 0.2);
-                    this.mass = 5;
-                } else if (type === 'bomb') {
-                    this.w = 30; this.h = 30;
-                    this.color = '#ef4444';
-                    this.restitution = 0.1;
-                    this.mass = 1.5;
+                // Material-spezifische Eigenschaften
+                switch(type) {
+                    case 'wood':
+                        this.color = '#8B4513';
+                        this.mass = 1;
+                        this.restitution = Math.min(globalBounce, 0.4);
+                        this.destroyable = true;
+                        break;
+                    case 'stone':
+                        this.color = '#6b7280';
+                        this.mass = 3;
+                        this.restitution = Math.min(globalBounce, 0.2);
+                        this.destroyable = true;
+                        break;
+                    case 'metal':
+                        this.color = '#00bcd4';
+                        this.mass = 5;
+                        this.restitution = Math.max(globalBounce, 0.5);
+                        this.destroyable = false; // Metall ist unzerstörbar
+                        break;
+                    case 'ball':
+                        this.w = 30; this.h = 30;
+                        this.color = '#fcc02a';
+                        this.mass = 0.5;
+                        this.restitution = 0.85; // Bälle springen immer
+                        this.destroyable = true;
+                        break;
+                    case 'bomb':
+                        this.w = 30; this.h = 30;
+                        this.color = '#ef4444';
+                        this.mass = 1.5;
+                        this.restitution = 0.1;
+                        this.destroyable = true;
+                        break;
                 }
             }
 
@@ -355,16 +371,17 @@
                 this.x += this.vx;
                 this.y += this.vy;
 
-                // Luftwiderstand
-                this.vx *= 0.99;
+                this.vx *= 0.99; // Luftwiderstand
                 this.vy *= 0.99;
 
-                // Kollision mit Wänden
+                // Kollision mit Wänden und BODEN (Hitbox hinzugefügt)
                 if (this.x < 0) { this.x = 0; this.vx *= -this.restitution; }
                 if (this.x + this.w > canvas.width) { this.x = canvas.width - this.w; this.vx *= -this.restitution; }
                 if (this.y < 0) { this.y = 0; this.vy *= -this.restitution; }
-                if (this.y + this.h > canvas.height) { 
-                    this.y = canvas.height - this.h; 
+                
+                // Boden-Kollision (canvas.height - GROUND_HEIGHT)
+                if (this.y + this.h > canvas.height - GROUND_HEIGHT) { 
+                    this.y = canvas.height - GROUND_HEIGHT - this.h; 
                     this.vy *= -this.restitution;
                     this.vx *= 0.9; // Bodenreibung
                 }
@@ -374,6 +391,7 @@
                 if (this.isDead) return;
                 ctx.fillStyle = this.color;
                 ctx.beginPath();
+                
                 if (this.type === 'ball') {
                     ctx.arc(this.x + this.w/2, this.y + this.h/2, this.w/2, 0, Math.PI * 2);
                     ctx.fill();
@@ -382,14 +400,14 @@
                     ctx.arc(this.x + this.w/3, this.y + this.h/3, this.w/6, 0, Math.PI * 2);
                     ctx.fill();
                 } else {
-                    ctx.roundRect(this.x, this.y, this.w, this.h, 8);
+                    ctx.roundRect(this.x, this.y, this.w, this.h, 6);
                     ctx.fill();
                     
                     if (this.type === 'bomb') {
                         ctx.fillStyle = '#fcc02a';
-                        ctx.fillRect(this.x + this.w/2 - 2, this.y - 10, 4, 10);
+                        ctx.fillRect(this.x + this.w/2 - 2, this.y - 8, 4, 8);
                         ctx.beginPath();
-                        ctx.arc(this.x + this.w/2, this.y - 10, 4, 0, Math.PI * 2);
+                        ctx.arc(this.x + this.w/2, this.y - 8, 4, 0, Math.PI * 2);
                         ctx.fill();
                     }
                 }
@@ -401,13 +419,17 @@
                 
                 const bx = this.x + this.w/2;
                 const by = this.y + this.h/2;
-                const radius = 150;
-                const force = 15;
+                const blastRadius = 160; // Zerstörungsradius
 
-                for (let i = 0; i < 30; i++) {
+                // Schockwelle erzeugen
+                shockwaves.push(new Shockwave(bx, by, blastRadius));
+
+                // Partikel
+                for (let i = 0; i < 40; i++) {
                     particles.push(new Particle(bx, by));
                 }
 
+                // Zerstörung und Kraft anwenden
                 entities.forEach(e => {
                     if (e === this || e.isDead) return;
                     const ex = e.x + e.w/2;
@@ -416,12 +438,48 @@
                     const dy = ey - by;
                     const dist = Math.sqrt(dx*dx + dy*dy);
 
-                    if (dist < radius && dist > 0) {
-                        const power = force * (1 - dist/radius);
+                    if (dist < blastRadius && dist > 0) {
+                        // Kraft anwenden
+                        const power = 20 * (1 - dist/blastRadius);
                         e.vx += (dx / dist) * power;
                         e.vy += (dy / dist) * power;
+
+                        // ZERSTÖRUNG: Wenn das Material zerstörbar ist und nahe genug dran
+                        if (e.destroyable && dist < blastRadius * 0.8) {
+                            e.isDead = true;
+                            // Kleine Partikel für die Zerstörung
+                            for(let k=0; k<5; k++) particles.push(new Particle(ex, ey));
+                        }
                     }
                 });
+            }
+        }
+
+        // --- SHOCKWAVE KLASSE (Visueller Explosionseffekt) ---
+        class Shockwave {
+            constructor(x, y, maxRadius) {
+                this.x = x; this.y = y;
+                this.radius = 0;
+                this.maxRadius = maxRadius;
+                this.life = 1.0;
+            }
+            update() {
+                this.radius += 12;
+                this.life -= 0.05;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(255, 80, 80, ${this.life})`;
+                ctx.lineWidth = 4;
+                ctx.stroke();
+                
+                // Innerer Ring
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius * 0.6, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(255, 200, 80, ${this.life * 0.5})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
             }
         }
 
@@ -430,17 +488,17 @@
             constructor(x, y) {
                 this.x = x;
                 this.y = y;
-                this.vx = (Math.random() - 0.5) * 15;
-                this.vy = (Math.random() - 0.5) * 15;
+                this.vx = (Math.random() - 0.5) * 20;
+                this.vy = (Math.random() - 0.5) * 20;
                 this.life = 1.0;
-                this.color = Math.random() > 0.5 ? '#ef4444' : '#fcc02a';
-                this.size = Math.random() * 4 + 2;
+                this.color = Math.random() > 0.5 ? '#ef4444' : (Math.random() > 0.5 ? '#fcc02a' : '#ffffff');
+                this.size = Math.random() * 5 + 2;
             }
             update() {
                 this.x += this.vx;
                 this.y += this.vy;
-                this.vy += 0.2;
-                this.life -= 0.02;
+                this.vy += 0.3;
+                this.life -= 0.025;
             }
             draw() {
                 ctx.globalAlpha = this.life;
@@ -452,23 +510,23 @@
             }
         }
 
-        // --- SPIEL LOGIK ---
+        // --- LOGIK ---
         function spawnEntity(x, y) {
-            // Verhindern, dass Objekte zu nah am Rand spawnen
-            x = Math.max(10, Math.min(x, canvas.width - 60));
-            y = Math.max(10, Math.min(y, canvas.height - 60));
+            // Verhindern, dass Objekte im Boden spawnen
+            if (y > canvas.height - GROUND_HEIGHT - 20) return;
             
-            // Um Performance auf dem Handy zu sparen, begrenzen wir die Anzahl der Objekte
-            if (entities.length > 250) {
-                entities.shift(); // Entfernt das älteste Objekt
+            // Performance-Limit
+            if (entities.length > 300) {
+                entities.shift(); 
             }
             
-            const newEntity = new Entity(x - 25, y - 25, currentTool);
+            // Zentrierung des Objekts auf den Cursor
+            const size = currentTool === 'ball' || currentTool === 'bomb' ? 30 : 40;
+            const newEntity = new Entity(x - size/2, y - size/2, currentTool);
             entities.push(newEntity);
         }
 
         function eraseAt(x, y) {
-            // Von hinten nach vorne durchgehen, um das oberste Objekt zu löschen
             for (let i = entities.length - 1; i >= 0; i--) {
                 let e = entities[i];
                 if (x >= e.x && x <= e.x + e.w && y >= e.y && y <= e.y + e.h) {
@@ -478,7 +536,6 @@
             }
         }
 
-        // Kollisionsauflösung
         function resolveCollisions() {
             for (let i = 0; i < entities.length; i++) {
                 for (let j = i + 1; j < entities.length; j++) {
@@ -490,8 +547,9 @@
                         let overlapX = Math.min(a.x + a.w - b.x, b.x + b.w - a.x);
                         let overlapY = Math.min(a.y + a.h - b.y, b.y + b.h - a.y);
 
-                        if (a.type === 'bomb' && Math.abs(a.vy) > 2) a.explode();
-                        if (b.type === 'bomb' && Math.abs(b.vy) > 2) b.explode();
+                        // Bomben zünden bei starkem Aufprall
+                        if (a.type === 'bomb' && Math.abs(a.vy) > 2.5) a.explode();
+                        if (b.type === 'bomb' && Math.abs(b.vy) > 2.5) b.explode();
 
                         if (overlapX < overlapY) {
                             if (a.x < b.x) { a.x -= overlapX / 2; b.x += overlapX / 2; }
@@ -519,7 +577,8 @@
         function gameLoop() {
             entities.forEach(e => {
                 e.update();
-                if (e.type === 'bomb' && e.y + e.h >= canvas.height && Math.abs(e.vy) > 2) {
+                // Bombe explodiert beim Aufprall auf den Boden
+                if (e.type === 'bomb' && e.y + e.h >= canvas.height - GROUND_HEIGHT && Math.abs(e.vy) > 2.5) {
                     e.explode();
                 }
             });
@@ -527,20 +586,33 @@
             resolveCollisions();
 
             particles.forEach(p => p.update());
+            shockwaves.forEach(s => s.update());
             
             entities = entities.filter(e => !e.isDead);
             particles = particles.filter(p => p.life > 0);
+            shockwaves = shockwaves.filter(s => s.life > 0);
 
             // Zeichnen
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
+            // Boden zeichnen (Sichtbare Hitbox)
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillRect(0, canvas.height - GROUND_HEIGHT, canvas.width, GROUND_HEIGHT);
+            // Boden-Linie
+            ctx.strokeStyle = '#4b5563';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height - GROUND_HEIGHT);
+            ctx.lineTo(canvas.width, canvas.height - GROUND_HEIGHT);
+            ctx.stroke();
+
             entities.forEach(e => e.draw());
+            shockwaves.forEach(s => s.draw());
             particles.forEach(p => p.draw());
 
             requestAnimationFrame(gameLoop);
         }
 
-        // Spiel starten
         gameLoop();
     </script>
 </body>
