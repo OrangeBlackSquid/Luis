@@ -3,85 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weiterleitung...</title>
-
-    <meta http-equiv="refresh" content="0; url=https://pornhub.com">
-
+    <title>Luis - APB System</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            height: 100%;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
+        /* Design passend zum Bild */
         body {
+            background-color: #121212; /* Dunkler Hintergrund */
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
             display: flex;
-            justify-content: center;
-            align-items: center;
             flex-direction: column;
-            background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #1a2980, #26d0ce);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
+            align-items: center;
+        }
+
+        h1 {
             color: #ffffff;
-            text-align: center;
-            overflow: hidden;
+            margin-bottom: 5px;
+            font-size: 2em;
         }
 
-        @keyframes gradientShift {
-            0%   { background-position: 0% 50%; }
-            50%  { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        h2 {
+            color: #f0b132; /* Gelb/Gold */
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 1.2em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .loader {
-            width: 60px;
-            height: 60px;
-            border: 4px solid rgba(255, 255, 255, 0.25);
-            border-top-color: #ffffff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 2rem;
+        .input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 500px;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #333;
+            background-color: #2c2f33;
+            color: white;
+            font-size: 16px;
         }
 
-        .message {
-            font-size: 1.4rem;
-            font-weight: 500;
-            letter-spacing: 0.05em;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #f0b132;
         }
 
-        .message a {
-            color: #26d0ce;
-            text-decoration: none;
-            font-weight: 700;
-            border-bottom: 2px solid #26d0ce;
-            transition: color 0.3s, border-color 0.3s;
+        button {
+            padding: 12px 20px;
+            border-radius: 6px;
+            border: none;
+            background-color: #f0b132;
+            color: #121212;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
         }
 
-        .message a:hover {
-            color: #ffffff;
-            border-color: #ffffff;
+        button:hover {
+            background-color: #dca01f;
+        }
+
+        .notes-container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* Design der APB Karten (wie im Bild) */
+        .note-card {
+            background-color: #2c2f33;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            text-align: left;
+        }
+
+        .note-card .apb-title {
+            color: #f0b132;
+            font-weight: 800;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .note-card .note-text {
+            color: #e0e0e0;
+            font-size: 1em;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .note-card .note-meta {
+            color: #72767d;
+            font-size: 0.85em;
         }
     </style>
 </head>
 <body>
-    <div class="loader"></div>
-    <p class="message">
-        Du wirst weitergeleitet...<br>
-        <a href="https://placeholder.com">Falls nicht, klicke hier</a>
-    </p>
 
-    <script>
-        window.location.replace("https://pornhub.com");
+    <h1>Luis</h1>
+    <h2>APB System</h2>
+
+    <div class="input-container">
+        <input type="text" id="noteInput" placeholder="Notiz eingeben (z.B. Test)...">
+        <button onclick="addNote()">Senden</button>
+    </div>
+
+    <div class="notes-container" id="notesContainer">
+        <!-- Hier werden die Notizen automatisch eingefügt -->
+    </div>
+
+    <!-- Firebase SDK laden -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // ==========================================
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyB5v8vEyaoscAxcP2spKx6WoHGwc29gElA",
+            authDomain: "luis-apb.firebaseapp.com",
+            databaseURL: "https://luis-apb-default-rtdb.firebaseio.com",
+            projectId: "luis-apb",
+            storageBucket: "luis-apb.firebasestorage.app",
+            messagingSenderId: "58041196627",
+            appId: "1:58041196627:web:1c92e32d445853f5f9a6a6"
+        };
+        // ==========================================
+
+        // Firebase initialisieren
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const notesRef = ref(db, 'apb_notes');
+
+        const notesContainer = document.getElementById('notesContainer');
+
+        // Funktion zum Abrufen und Anzeigen der Notizen
+        onValue(notesRef, (snapshot) => {
+            notesContainer.innerHTML = ''; // Container leeren
+            const data = snapshot.val();
+            
+            if (data) {
+                // Daten in ein Array umwandeln und nach Zeit sortieren (neueste zuerst)
+                const notesArray = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
+
+                notesArray.forEach(note => {
+                    const card = document.createElement('div');
+                    card.className = 'note-card';
+                    card.innerHTML = `
+                        <div class="apb-title">APB</div>
+                        <div class="note-text">Note: ${note.text}</div>
+                        <div class="note-meta">By: ${note.author} ${note.dateString}</div>
+                    `;
+                    notesContainer.appendChild(card);
+                });
+            }
+        });
+
+        // Funktion zum Hinzufügen einer Notiz
+        window.addNote = function() {
+            const input = document.getElementById('noteInput');
+            const text = input.value.trim();
+
+            if (text === "") return; // Leere Eingaben ignorieren
+
+            // Datum und Uhrzeit im Format TT/MM/JJJJ HH:MM generieren
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const dateString = `${day}/${month}/${year} ${hours}:${minutes}`;
+
+            // Daten an Firebase senden
+            push(notesRef, {
+                text: text,
+                author: 'Anonym',
+                dateString: dateString,
+                timestamp: Date.now() // Für die Sortierung
+            });
+
+            // Eingabefeld leeren
+            input.value = '';
+        }
     </script>
 </body>
 </html>
