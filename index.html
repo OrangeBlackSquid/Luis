@@ -2,8 +2,9 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Physik Sandbox</title>
+    <!-- Wichtig für Mobile: Verhindert das automatische Zoomen und sorgt für die richtige Skalierung -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Physik Sandbox Mobile</title>
     <style>
         /* --- CSS (Design & Layout) --- */
         * {
@@ -11,86 +12,95 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Arial', sans-serif;
+            -webkit-tap-highlight-color: transparent; /* Entfernt blaues Aufblitzen beim Tippen auf dem Handy */
         }
 
-        body {
-            background-color: #1a2233; /* Dunkelblau */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-            color: #ffffff;
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* Verhindert Scrollen der Seite */
+            background-color: #1a2233;
+            touch-action: none; /* Verhindert Zoom und Scroll-Gesten */
         }
 
         #game-container {
             position: relative;
-            width: 90vw;
-            height: 90vh;
-            max-width: 1200px;
-            max-height: 800px;
-            border-radius: 12px;
+            width: 100vw;
+            height: 100vh;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
             background-color: #111827;
         }
 
         /* Gitter-Hintergrund für den Sandbox-Look */
         canvas {
             display: block;
+            width: 100%;
+            height: 100%;
             background-color: #111827;
             background-image: 
                 linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
             background-size: 40px 40px;
-            cursor: crosshair;
         }
 
-        /* UI Panel (Glassmorphism) */
+        /* UI Panel - Am unteren Rand für Mobile optimiert */
         #ui-panel {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(26, 34, 51, 0.8);
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(26, 34, 51, 0.95);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            width: 250px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            gap: 8px;
+            z-index: 100;
+            max-height: 45vh; /* Falls es zu viel wird, kann man es scrollen */
+            overflow-y: auto;
+        }
+
+        /* Auf größeren Bildschirmen (Desktop) sieht es wieder wie ein schwebendes Panel aus */
+        @media (min-width: 768px) {
+            #ui-panel {
+                top: 20px;
+                left: 20px;
+                bottom: auto;
+                width: 280px;
+                border-radius: 12px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            }
         }
 
         h2 {
-            font-size: 18px;
-            margin-bottom: 5px;
-            color: #5ecf7a;
+            font-size: 12px;
+            color: #9ca3af;
             text-transform: uppercase;
             letter-spacing: 1px;
+            margin-bottom: 2px;
         }
 
         .tool-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
         }
 
         button {
+            flex: 1 1 calc(33.333% - 6px);
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
-            padding: 10px;
-            border-radius: 8px;
+            padding: 8px 4px;
+            border-radius: 6px;
             cursor: pointer;
-            transition: all 0.2s;
-            font-size: 14px;
+            transition: all 0.1s;
+            font-size: 12px;
             font-weight: bold;
-        }
-
-        button:hover {
-            background: rgba(255, 255, 255, 0.2);
+            white-space: nowrap;
         }
 
         button.active {
@@ -104,28 +114,38 @@
         button#btn-ball.active { background: #fcc02a; border-color: #fcc02a; color: #111827; }
         button#btn-eraser.active { background: #ff7f50; border-color: #ff7f50; color: white; }
 
+        .sliders {
+            display: flex;
+            gap: 15px;
+            justify-content: space-between;
+        }
+
         .slider-container {
             display: flex;
             flex-direction: column;
-            gap: 5px;
-            font-size: 12px;
+            gap: 2px;
+            font-size: 10px;
             color: #9ca3af;
+            flex: 1;
         }
 
         input[type="range"] {
             width: 100%;
             accent-color: #5ecf7a;
             cursor: pointer;
+            height: 20px;
         }
 
         #clear-btn {
-            background: #ef4444;
+            background: rgba(239, 68, 68, 0.2);
             border-color: #ef4444;
-            margin-top: 10px;
+            color: #ef4444;
+            margin-top: 4px;
         }
 
-        #clear-btn:hover {
-            background: #dc2626;
+        #clear-btn:hover, #clear-btn:active {
+            background: #ef4444;
+            color: white;
         }
     </style>
 </head>
@@ -135,23 +155,29 @@
         <canvas id="sandboxCanvas"></canvas>
 
         <div id="ui-panel">
-            <h2>Werkzeuge</h2>
-            <div class="tool-grid">
-                <button id="btn-block" class="active">Block</button>
-                <button id="btn-ball">Ball</button>
-                <button id="btn-heavy">Schwer</button>
-                <button id="btn-bomb">Bombe</button>
-                <button id="btn-eraser" style="grid-column: span 2;">Radiergummi</button>
+            <div>
+                <h2>Werkzeuge</h2>
+                <div class="tool-grid">
+                    <button id="btn-block" class="active">Block</button>
+                    <button id="btn-ball">Ball</button>
+                    <button id="btn-heavy">Schwer</button>
+                    <button id="btn-bomb">Bombe</button>
+                    <button id="btn-eraser" style="flex: 1 1 100%;">Radiergummi</button>
+                </div>
             </div>
 
-            <h2>Physik</h2>
-            <div class="slider-container">
-                <label>Schwerkraft: <span id="gravity-val">0.5</span></label>
-                <input type="range" id="gravity-slider" min="0" max="2" step="0.1" value="0.5">
-            </div>
-            <div class="slider-container">
-                <label>Elastizität (Bounce): <span id="bounce-val">0.3</span></label>
-                <input type="range" id="bounce-slider" min="0" max="1" step="0.1" value="0.3">
+            <div>
+                <h2>Physik</h2>
+                <div class="sliders">
+                    <div class="slider-container">
+                        <label>Schwerkraft: <span id="gravity-val">0.5</span></label>
+                        <input type="range" id="gravity-slider" min="0" max="2" step="0.1" value="0.5">
+                    </div>
+                    <div class="slider-container">
+                        <label>Elastizität: <span id="bounce-val">0.3</span></label>
+                        <input type="range" id="bounce-slider" min="0" max="1" step="0.1" value="0.3">
+                    </div>
+                </div>
             </div>
 
             <button id="clear-btn">Alles löschen</button>
@@ -163,13 +189,14 @@
         const canvas = document.getElementById('sandboxCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Canvas Größe an Container anpassen
+        // Canvas Größe an Container anpassen (Wichtig für Mobile)
         function resizeCanvas() {
             canvas.width = canvas.parentElement.clientWidth;
             canvas.height = canvas.parentElement.clientHeight;
         }
         window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+        // Initiale Größe setzen
+        setTimeout(resizeCanvas, 0);
 
         // Globale Variablen
         let entities = [];
@@ -177,9 +204,12 @@
         let gravity = 0.5;
         let globalBounce = 0.3;
         let currentTool = 'block';
-        let mouseX = 0;
-        let mouseY = 0;
-        let isMouseDown = false;
+        
+        // Variablen für die Wisch-Steuerung
+        let isDrawing = false;
+        let lastSpawnX = 0;
+        let lastSpawnY = 0;
+        const SPAWN_DISTANCE = 35; // Mindestabstand zwischen Objekten beim Wischen
 
         // UI Elemente
         const buttons = {
@@ -217,28 +247,70 @@
             particles = [];
         });
 
-        // Maus Interaktionen
-        canvas.addEventListener('mousemove', (e) => {
+        // --- KOORDINATEN BERECHNUNG (Wichtig für Mobile Skalierung) ---
+        function getPointerPos(e) {
             const rect = canvas.getBoundingClientRect();
-            mouseX = e.clientX - rect.left;
-            mouseY = e.clientY - rect.top;
-        });
+            // Skalierung berechnen (falls das Canvas durch CSS verkleinert/vergrößert wird)
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+        }
 
-        canvas.addEventListener('mousedown', (e) => {
-            isMouseDown = true;
-            const rect = canvas.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const clickY = e.clientY - rect.top;
+        // --- POINTER EVENTS (Maus & Touch vereint) ---
+        canvas.addEventListener('pointerdown', (e) => {
+            e.preventDefault(); // Verhindert Standard-Touch-Verhalten
+            isDrawing = true;
+            const pos = getPointerPos(e);
             
             if (currentTool === 'eraser') {
-                eraseAt(clickX, clickY);
+                eraseAt(pos.x, pos.y);
             } else {
-                spawnEntity(clickX, clickY);
+                spawnEntity(pos.x, pos.y);
+                lastSpawnX = pos.x;
+                lastSpawnY = pos.y;
             }
         });
 
-        canvas.addEventListener('mouseup', () => isMouseDown = false);
-        canvas.addEventListener('mouseleave', () => isMouseDown = false);
+        canvas.addEventListener('pointermove', (e) => {
+            e.preventDefault();
+            if (!isDrawing) return;
+            
+            const pos = getPointerPos(e);
+            
+            if (currentTool === 'eraser') {
+                eraseAt(pos.x, pos.y);
+            } else {
+                // Berechne die Distanz zum zuletzt platzierten Objekt
+                const dx = pos.x - lastSpawnX;
+                const dy = pos.y - lastSpawnY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                // Wenn weit genug gewischt wurde, platziere ein neues Objekt
+                if (dist > SPAWN_DISTANCE) {
+                    spawnEntity(pos.x, pos.y);
+                    lastSpawnX = pos.x;
+                    lastSpawnY = pos.y;
+                }
+            }
+        });
+
+        canvas.addEventListener('pointerup', (e) => {
+            e.preventDefault();
+            isDrawing = false;
+        });
+        
+        // Falls der Finger den Bildschirm verlässt oder die Berührung abgebrochen wird
+        canvas.addEventListener('pointercancel', (e) => {
+            e.preventDefault();
+            isDrawing = false;
+        });
+        
+        canvas.addEventListener('pointerleave', () => {
+            isDrawing = false;
+        });
 
         // --- ENTITY KLASSE ---
         class Entity {
@@ -261,12 +333,12 @@
                 if (type === 'ball') {
                     this.w = 35; this.h = 35;
                     this.color = '#fcc02a';
-                    this.restitution = Math.max(globalBounce, 0.7); // Bälle springen immer gut
+                    this.restitution = Math.max(globalBounce, 0.7);
                     this.mass = 0.8;
                 } else if (type === 'heavy') {
                     this.w = 60; this.h = 60;
                     this.color = '#9ca3af';
-                    this.restitution = Math.min(globalBounce, 0.2); // Schwere Blöcke springen kaum
+                    this.restitution = Math.min(globalBounce, 0.2);
                     this.mass = 5;
                 } else if (type === 'bomb') {
                     this.w = 30; this.h = 30;
@@ -279,14 +351,11 @@
             update() {
                 if (this.isDead) return;
                 
-                // Schwerkraft anwenden
                 this.vy += gravity;
-
-                // Position aktualisieren
                 this.x += this.vx;
                 this.y += this.vy;
 
-                // Luftwiderstand / Reibung
+                // Luftwiderstand
                 this.vx *= 0.99;
                 this.vy *= 0.99;
 
@@ -308,7 +377,6 @@
                 if (this.type === 'ball') {
                     ctx.arc(this.x + this.w/2, this.y + this.h/2, this.w/2, 0, Math.PI * 2);
                     ctx.fill();
-                    // Highlight für den Ball
                     ctx.fillStyle = 'rgba(255,255,255,0.3)';
                     ctx.beginPath();
                     ctx.arc(this.x + this.w/3, this.y + this.h/3, this.w/6, 0, Math.PI * 2);
@@ -317,7 +385,6 @@
                     ctx.roundRect(this.x, this.y, this.w, this.h, 8);
                     ctx.fill();
                     
-                    // Bomben-Zündschnur
                     if (this.type === 'bomb') {
                         ctx.fillStyle = '#fcc02a';
                         ctx.fillRect(this.x + this.w/2 - 2, this.y - 10, 4, 10);
@@ -337,12 +404,10 @@
                 const radius = 150;
                 const force = 15;
 
-                // Partikel erzeugen
                 for (let i = 0; i < 30; i++) {
                     particles.push(new Particle(bx, by));
                 }
 
-                // Kraft auf andere Objekte anwenden
                 entities.forEach(e => {
                     if (e === this || e.isDead) return;
                     const ex = e.x + e.w/2;
@@ -360,7 +425,7 @@
             }
         }
 
-        // --- PARTIKEL KLASSE (für Explosionen) ---
+        // --- PARTIKEL KLASSE ---
         class Particle {
             constructor(x, y) {
                 this.x = x;
@@ -374,7 +439,7 @@
             update() {
                 this.x += this.vx;
                 this.y += this.vy;
-                this.vy += 0.2; // Partikel-Schwerkraft
+                this.vy += 0.2;
                 this.life -= 0.02;
             }
             draw() {
@@ -393,21 +458,27 @@
             x = Math.max(10, Math.min(x, canvas.width - 60));
             y = Math.max(10, Math.min(y, canvas.height - 60));
             
+            // Um Performance auf dem Handy zu sparen, begrenzen wir die Anzahl der Objekte
+            if (entities.length > 250) {
+                entities.shift(); // Entfernt das älteste Objekt
+            }
+            
             const newEntity = new Entity(x - 25, y - 25, currentTool);
             entities.push(newEntity);
         }
 
         function eraseAt(x, y) {
+            // Von hinten nach vorne durchgehen, um das oberste Objekt zu löschen
             for (let i = entities.length - 1; i >= 0; i--) {
                 let e = entities[i];
                 if (x >= e.x && x <= e.x + e.w && y >= e.y && y <= e.y + e.h) {
                     entities.splice(i, 1);
-                    return; // Nur ein Objekt pro Klick löschen
+                    return; 
                 }
             }
         }
 
-        // AABB Kollisionsauflösung (vereinfacht für Sandbox)
+        // Kollisionsauflösung
         function resolveCollisions() {
             for (let i = 0; i < entities.length; i++) {
                 for (let j = i + 1; j < entities.length; j++) {
@@ -416,16 +487,13 @@
                     if (a.isDead || b.isDead) continue;
 
                     if (a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y) {
-                        // Kollision erkannt
                         let overlapX = Math.min(a.x + a.w - b.x, b.x + b.w - a.x);
                         let overlapY = Math.min(a.y + a.h - b.y, b.y + b.h - a.y);
 
-                        // Bomben zünden bei Aufprall
                         if (a.type === 'bomb' && Math.abs(a.vy) > 2) a.explode();
                         if (b.type === 'bomb' && Math.abs(b.vy) > 2) b.explode();
 
                         if (overlapX < overlapY) {
-                            // X-Achse auflösen
                             if (a.x < b.x) { a.x -= overlapX / 2; b.x += overlapX / 2; }
                             else { a.x += overlapX / 2; b.x -= overlapX / 2; }
                             
@@ -433,7 +501,6 @@
                             a.vx = b.vx * b.restitution; 
                             b.vx = temp * a.restitution;
                         } else {
-                            // Y-Achse auflösen
                             if (a.y < b.y) { a.y -= overlapY / 2; b.y += overlapY / 2; }
                             else { a.y += overlapY / 2; b.y -= overlapY / 2; }
                             
@@ -441,7 +508,6 @@
                             a.vy = b.vy * b.restitution; 
                             b.vy = temp * a.restitution;
                             
-                            // Reibung auf X-Achse beim Aufprall auf Y
                             a.vx *= 0.95; b.vx *= 0.95;
                         }
                     }
@@ -451,12 +517,6 @@
 
         // --- HAUPT LOOP ---
         function gameLoop() {
-            // Update
-            if (isMouseDown && currentTool !== 'eraser') {
-                // Wenn Maus gedrückt gehalten wird, spawnen wir kontinuierlich (wie ein Pinsel)
-                if (Math.random() > 0.8) spawnEntity(mouseX, mouseY);
-            }
-
             entities.forEach(e => {
                 e.update();
                 if (e.type === 'bomb' && e.y + e.h >= canvas.height && Math.abs(e.vy) > 2) {
@@ -468,29 +528,12 @@
 
             particles.forEach(p => p.update());
             
-            // Tote Entitäten entfernen
             entities = entities.filter(e => !e.isDead);
             particles = particles.filter(p => p.life > 0);
 
             // Zeichnen
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Maus-Vorschau zeichnen
-            if (currentTool !== 'eraser') {
-                ctx.globalAlpha = 0.3;
-                ctx.fillStyle = currentTool === 'block' ? '#5ecf7a' : 
-                               currentTool === 'ball' ? '#fcc02a' : 
-                               currentTool === 'heavy' ? '#9ca3af' : '#ef4444';
-                ctx.beginPath();
-                if (currentTool === 'ball') {
-                    ctx.arc(mouseX, mouseY, 17, 0, Math.PI * 2);
-                } else {
-                    ctx.roundRect(mouseX - 25, mouseY - 25, currentTool === 'heavy' ? 60 : 50, currentTool === 'heavy' ? 60 : 50, 8);
-                }
-                ctx.fill();
-                ctx.globalAlpha = 1.0;
-            }
-
             entities.forEach(e => e.draw());
             particles.forEach(p => p.draw());
 
