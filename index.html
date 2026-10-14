@@ -67,7 +67,6 @@
 (() => {
 'use strict';
 
-// ============ CANVAS ============
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
@@ -87,7 +86,6 @@ function resize() {
   canvas.style.width = W + 'px';
   canvas.style.height = H + 'px';
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  if (G.stars.length === 0) G.stars = makeStars();
 }
 window.addEventListener('resize', resize);
 
@@ -112,6 +110,7 @@ const G = {
   player: null,
   planets: [],
   particles: [],
+  popups: [],
   stars: [],
   camera: { x: 0, y: 0 },
   flash: 0,
@@ -150,6 +149,7 @@ function makePlayer(planet) {
     vx: 0, vy: 0,
     mode: 'orbit',
     planet,
+    sourcePlanet: null, // Planet, von dem wir zuletzt losgeflogen sind
     angle: -Math.PI / 2,
     orbitRadius: ORBIT_RADIUS,
     trail: [],
@@ -209,6 +209,7 @@ function resetGame() {
   G.time = 0;
   G.planets = [];
   G.particles = [];
+  G.popups = [];
   G.flash = 0;
   G.shake = 0;
   G.flyingTime = 0;
@@ -247,6 +248,9 @@ function onTap(e) {
   p.vx = -Math.sin(t) * FLY_SPEED;
   p.vy = Math.cos(t) * FLY_SPEED;
   p.mode = 'fly';
+  // WICHTIG: Wir merken uns, von welchem Planeten wir gerade gestartet sind,
+  // damit wir nicht sofort wieder von ihm eingefangen werden.
+  p.sourcePlanet = p.planet;
   G.flyingTime = 0;
 
   const dirA = Math.atan2(p.vy, p.vx) + Math.PI;
@@ -261,16 +265,9 @@ function onTap(e) {
   }
 }
 
-// Attach to document so it works regardless of overlays
 document.addEventListener('pointerdown', onTap, { passive: false });
-document.addEventListener('mousedown', (e) => {
-  // Fallback for older browsers
-  if (!window.PointerEvent) onTap(e);
-}, { passive: false });
-document.addEventListener('touchstart', (e) => {
-  // Fallback for older mobile
-  if (!window.PointerEvent) onTap(e);
-}, { passive: false });
+document.addEventListener('mousedown', (e) => { if (!window.PointerEvent) onTap(e); }, { passive: false });
+document.addEventListener('touchstart', (e) => { if (!window.PointerEvent) onTap(e); }, { passive: false });
 document.addEventListener('keydown', (e) => {
   if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'Enter') {
     e.preventDefault();
@@ -314,6 +311,7 @@ function capturePlayer(planet, dx, dy) {
   p.vx = 0;
   p.vy = 0;
   p.trail = [];
+  p.sourcePlanet = null;
 
   G.score += 10;
   scoreEl.textContent = G.score;
@@ -334,6 +332,16 @@ function capturePlayer(planet, dx, dy) {
     angle: 0, speed: 0, life: 0.45,
     color: c, size: 12, ring: true, drag: 1,
   }));
+
+  // Score-Popup "+10"
+  G.popups.push({
+    x: p.x,
+    y: p.y - 20,
+    text: '+10',
+    life: 1.0,
+    maxLife: 1.0,
+    color: c,
+  });
 
   while (G.planets.length < 6) spawnNextPlanet();
 
@@ -356,6 +364,13 @@ function update(dt) {
     updateParticles(dt);
   }
 
+  // Popups
+  for (const pp of G.popups) {
+    pp.y -= dt * 55;
+    pp.life -= dt;
+  }
+  G.popups = G.popups.filter(pp => pp.life > 0);
+
   for (const s of G.stars) s.twinkle += dt * 2;
 }
 
@@ -375,7 +390,10 @@ function updatePlayer(dt) {
     p.y += p.vy * dt;
     G.flyingTime += dt;
 
+    // Capture-Check: Wir überspringen den Planeten, von dem wir gerade gestartet sind!
     for (const planet of G.planets) {
+      if (planet === p.sourcePlanet) continue; // <-- DER FIX
+
       const dx = p.x - planet.x;
       const dy = p.y - planet.y;
       const d2 = dx * dx + dy * dy;
@@ -477,6 +495,21 @@ function render() {
   ctx.globalAlpha = 1;
 
   if (G.player) drawPlayer(G.player);
+
+  // Score-Popups
+  for (const pp of G.popups) {
+    const sp = w2s(pp.x, pp.y);
+    const a = Math.min(1, pp.life / pp.maxLife * 1.5);
+    ctx.globalAlpha = a;
+    ctx.font = 'bold 24px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = pp.color;
+    ctx.shadowColor = pp.color;
+    ctx.shadowBlur = 12;
+    ctx.fillText(pp.text, sp.x, sp.y);
+    ctx.shadowBlur = 0;
+  }
+  ctx.globalAlpha = 1;
 
   if (G.flash > 0) {
     ctx.fillStyle = `rgba(255,255,255,${G.flash * 0.4})`;
