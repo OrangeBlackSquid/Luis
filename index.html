@@ -1,646 +1,601 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ORBITAL</title>
+<title>Typing Challenge</title>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html, body {
     width:100%; height:100%; overflow:hidden;
-    background:#050810; touch-action:none;
-    -webkit-user-select:none; user-select:none;
+    background:#0a0e1a; color:#fff;
     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    touch-action:manipulation;
   }
-  #c { display:block; width:100%; height:100%; touch-action:none; }
-  #hud {
-    position:absolute; top:0; left:0; right:0; padding:24px;
-    display:flex; justify-content:center; pointer-events:none; z-index:10;
+
+  #app {
+    position:relative; width:100vw; height:100vh; overflow:hidden;
+    background:radial-gradient(ellipse at center,#141e33 0%,#0a0e1a 100%);
   }
-  #score {
-    color:#fff; font-size:46px; font-weight:800; letter-spacing:3px;
-    text-shadow:0 0 20px rgba(94,207,122,0.9), 0 0 44px rgba(94,207,122,0.5);
-  }
+
   .screen {
-    position:absolute; inset:0; display:flex; flex-direction:column;
-    justify-content:center; align-items:center; gap:14px; z-index:20;
-    background:radial-gradient(circle at center,rgba(10,15,30,0.65) 0%,rgba(5,8,16,0.96) 100%);
-    cursor:pointer; text-align:center; padding:20px;
-    touch-action:none;
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    padding:24px;
+    transition:opacity .25s;
   }
   .screen.hidden { display:none; }
-  .title {
-    color:#fff; font-size:56px; font-weight:900; letter-spacing:10px;
-    text-shadow:0 0 30px rgba(94,207,122,1), 0 0 60px rgba(94,207,122,0.5);
-    margin-bottom:12px;
+
+  /* ============ MENU ============ */
+  #menu {
+    justify-content:center; align-items:center; gap:20px;
+    text-align:center;
   }
-  .sub { color:#5ecf7a; font-size:13px; letter-spacing:4px; text-transform:uppercase; }
-  .hint { color:#8899aa; font-size:13px; margin-top:24px; letter-spacing:2px; animation:pulse 1.6s infinite; }
-  @keyframes pulse { 0%,100%{opacity:0.5;} 50%{opacity:1;} }
-  .gameover-title {
-    color:#ff4466; font-size:32px; font-weight:800; letter-spacing:6px;
-    text-shadow:0 0 24px rgba(255,68,102,0.9);
+  #menu h1 {
+    font-size:42px; font-weight:900; letter-spacing:6px;
+    background:linear-gradient(135deg,#5ecf7a,#00e5ff);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    background-clip:text;
+    margin-bottom:4px;
   }
-  .big { color:#fff; font-size:80px; font-weight:900; margin:8px 0;
-    text-shadow:0 0 32px rgba(94,207,122,0.9); }
-  .best { color:#ffcc00; font-size:15px; letter-spacing:3px; margin-top:4px; }
+  #menu .subtitle {
+    color:#6b7a94; font-size:13px; letter-spacing:3px;
+    text-transform:uppercase; margin-bottom:24px;
+  }
+  .difficulty-grid {
+    display:flex; flex-direction:column; gap:12px;
+    width:100%; max-width:380px;
+  }
+  .diff-btn {
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:14px;
+    padding:16px 20px;
+    color:#fff; cursor:pointer;
+    text-align:left;
+    transition:all .18s;
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:inherit;
+  }
+  .diff-btn:hover, .diff-btn:active {
+    background:rgba(94,207,122,.12);
+    border-color:#5ecf7a;
+    transform:translateY(-2px);
+  }
+  .diff-name { font-size:17px; font-weight:800; letter-spacing:2px; }
+  .diff-desc { font-size:11px; color:#6b7a94; margin-top:3px; }
+  .diff-badge {
+    font-size:20px; opacity:.85;
+  }
+
+  /* ============ PLAY ============ */
+  #play { padding:0; }
+
+  #play header {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:16px 20px 8px;
+    gap:12px;
+  }
+  #quitBtn {
+    background:rgba(255,255,255,.08);
+    border:none; color:#fff;
+    width:36px; height:36px; border-radius:50%;
+    font-size:20px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-family:inherit;
+  }
+  #quitBtn:hover { background:rgba(255,255,255,.15); }
+  .stats {
+    display:flex; gap:22px; align-items:center;
+  }
+  .stat {
+    text-align:center;
+  }
+  .stat .val {
+    font-size:18px; font-weight:800; color:#fff;
+    display:block;
+    font-variant-numeric:tabular-nums;
+  }
+  .stat .label {
+    font-size:9px; color:#6b7a94; letter-spacing:1.5px;
+    text-transform:uppercase;
+  }
+
+  #play main {
+    flex:1; display:flex; flex-direction:column;
+    justify-content:center; align-items:center;
+    padding:20px;
+  }
+
+  #wordDisplay {
+    font-size:clamp(28px,9vw,64px);
+    font-weight:800;
+    letter-spacing:2px;
+    line-height:1.15;
+    text-align:center;
+    word-break:break-word;
+    max-width:100%;
+    padding:20px 10px;
+    transition:transform .15s;
+    font-variant-numeric:tabular-nums;
+  }
+  #wordDisplay.shake {
+    animation:shake .35s ease-in-out;
+  }
+  #wordDisplay.complete {
+    animation:completePop .4s ease-out;
+  }
+  @keyframes shake {
+    0%,100% { transform:translateX(0); }
+    20%,60% { transform:translateX(-10px); }
+    40%,80% { transform:translateX(10px); }
+  }
+  @keyframes completePop {
+    0%   { transform:scale(1); color:#5ecf7a; }
+    40%  { transform:scale(1.12); color:#5ecf7a; text-shadow:0 0 40px rgba(94,207,122,.8); }
+    100% { transform:scale(1); }
+  }
+
+  #wordDisplay .char {
+    color:#3d4a63;
+    transition:color .1s;
+  }
+  #wordDisplay .char.correct {
+    color:#5ecf7a;
+  }
+  #wordDisplay .char.wrong {
+    color:#ff4a5e;
+    text-decoration:underline;
+    text-decoration-color:rgba(255,74,94,.6);
+  }
+  #wordDisplay .char.current {
+    position:relative;
+  }
+  #wordDisplay .char.current::after {
+    content:'';
+    position:absolute;
+    left:0; right:0; bottom:-6px;
+    height:4px; background:#5ecf7a;
+    border-radius:2px;
+    animation:cursorPulse 1s ease-in-out infinite;
+  }
+  @keyframes cursorPulse {
+    0%,100% { opacity:1; }
+    50% { opacity:.3; }
+  }
+
+  #play footer {
+    padding:0 20px 24px;
+  }
+  .progress-bar {
+    width:100%; height:4px;
+    background:rgba(255,255,255,.08);
+    border-radius:2px;
+    overflow:hidden;
+  }
+  #progressFill {
+    height:100%; width:0%;
+    background:linear-gradient(90deg,#5ecf7a,#00e5ff);
+    border-radius:2px;
+    transition:width .3s ease;
+  }
+
+  /* Hidden input for mobile keyboard */
+  #hiddenInput {
+    position:fixed;
+    top:50%; left:50%;
+    width:1px; height:1px;
+    opacity:0.01;
+    border:none; outline:none;
+    background:transparent;
+    color:transparent;
+    caret-color:transparent;
+    font-size:16px;
+    pointer-events:none;
+    z-index:-1;
+  }
+
+  /* ============ RESULTS ============ */
+  #results {
+    justify-content:center; align-items:center; gap:16px;
+    text-align:center;
+    background:radial-gradient(ellipse at center,rgba(94,207,122,.08) 0%,#0a0e1a 100%);
+  }
+  #results h1 {
+    font-size:36px; font-weight:900; letter-spacing:5px;
+    color:#5ecf7a;
+    text-shadow:0 0 30px rgba(94,207,122,.5);
+    margin-bottom:8px;
+  }
+  .result-stats {
+    display:grid; grid-template-columns:1fr 1fr; gap:14px;
+    width:100%; max-width:340px;
+    margin-bottom:16px;
+  }
+  .result-stats > div {
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08);
+    padding:16px 12px;
+    border-radius:12px;
+    text-align:center;
+  }
+  .result-stats label {
+    display:block; font-size:10px; color:#6b7a94;
+    letter-spacing:1.5px; text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .result-stats span {
+    font-size:22px; font-weight:800; color:#fff;
+  }
+  #menuBtn {
+    background:rgba(94,207,122,.15);
+    border:1px solid #5ecf7a;
+    color:#5ecf7a;
+    padding:14px 32px;
+    border-radius:10px;
+    font-size:14px; font-weight:800;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    cursor:pointer;
+    font-family:inherit;
+    margin-top:12px;
+  }
+  #menuBtn:hover { background:rgba(94,207,122,.25); }
 </style>
 </head>
 <body>
-<canvas id="c"></canvas>
-<div id="hud"><div id="score">0</div></div>
+<div id="app">
 
-<div id="menu" class="screen">
-  <div class="title">ORBITAL</div>
-  <div class="sub">Chain Orbits · Slingshot Forward</div>
-  <div class="hint">TAP TO START</div>
-</div>
+  <!-- MENU -->
+  <div id="menu" class="screen">
+    <h1>TYPING</h1>
+    <div class="subtitle">Challenge</div>
+    <div class="difficulty-grid">
+      <button class="diff-btn" data-diff="einfach">
+        <div>
+          <div class="diff-name">EINFACH</div>
+          <div class="diff-desc">Kurze, häufige Wörter</div>
+        </div>
+        <div class="diff-badge">⭐</div>
+      </button>
+      <button class="diff-btn" data-diff="mittel">
+        <div>
+          <div class="diff-name">MITTEL</div>
+          <div class="diff-desc">Längere Alltagswörter</div>
+        </div>
+        <div class="diff-badge">⭐⭐</div>
+      </button>
+      <button class="diff-btn" data-diff="schwer">
+        <div>
+          <div class="diff-name">SCHWER</div>
+          <div class="diff-desc">Komplexe Begriffe</div>
+        </div>
+        <div class="diff-badge">⭐⭐⭐</div>
+      </button>
+      <button class="diff-btn" data-diff="unmöglich">
+        <div>
+          <div class="diff-name">UNMÖGLICH</div>
+          <div class="diff-desc">Bürokratie-Monster</div>
+        </div>
+        <div class="diff-badge">💀</div>
+      </button>
+    </div>
+  </div>
 
-<div id="gameover" class="screen hidden">
-  <div class="gameover-title">GAME OVER</div>
-  <div class="big" id="final-score">0</div>
-  <div class="best" id="best-score">BEST: 0</div>
-  <div class="hint">TAP TO RETRY</div>
+  <!-- PLAY -->
+  <div id="play" class="screen hidden">
+    <header>
+      <button id="quitBtn">×</button>
+      <div class="stats">
+        <div class="stat">
+          <span class="val" id="wordProgress">1/25</span>
+          <span class="label">Wort</span>
+        </div>
+        <div class="stat">
+          <span class="val" id="accuracyVal">100%</span>
+          <span class="label">Genau</span>
+        </div>
+        <div class="stat">
+          <span class="val" id="streakVal">0</span>
+          <span class="label">Streak</span>
+        </div>
+      </div>
+    </header>
+    <main>
+      <div id="wordDisplay"></div>
+    </main>
+    <footer>
+      <div class="progress-bar"><div id="progressFill"></div></div>
+    </footer>
+    <input type="text" id="hiddenInput" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="text">
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results" class="screen hidden">
+    <h1>GESCHAFFT!</h1>
+    <div class="result-stats">
+      <div><label>Wörter</label><span id="resultWords">0</span></div>
+      <div><label>Genauigkeit</label><span id="resultAccuracy">0%</span></div>
+      <div><label>Beste Serie</label><span id="resultStreak">0</span></div>
+      <div><label>Zeit</label><span id="resultTime">0s</span></div>
+    </div>
+    <button id="menuBtn">Zurück zum Menü</button>
+  </div>
+
 </div>
 
 <script>
 (() => {
 'use strict';
 
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-const scoreEl = document.getElementById('score');
-const menuEl = document.getElementById('menu');
-const gameoverEl = document.getElementById('gameover');
-const finalScoreEl = document.getElementById('final-score');
-const bestScoreEl = document.getElementById('best-score');
+// ============================================================
+//  WORT-LISTEN (je ~200+ Wörter)
+// ============================================================
+const WORDS = {
+  einfach: `Haus Baum Hund Katze Ball Buch Tisch Stuhl Tür Wand Bett Auto Zug Bus Schiff Sonne Mond Stern Himmel Wolke Regen Schnee Wind Wasser Feuer Erde Sand Stein Berg Tal Fluss Meer See Wald Wiese Feld Garten Blume Rose Tulpe Gras Blatt Ast Wurzel Apfel Birne Banane Kirsche Traube Beere Brot Käse Milch Butter Ei Fleisch Fisch Reis Nudel Suppe Salat Kuchen Torte Keks Zucker Salz Pfeffer Honig Kaffee Tee Saft Bier Wein Glas Tasse Teller Löffel Gabel Messer Topf Pfanne Herd Schrank Regal Sofa Sessel Teppich Lampe Kerze Bild Uhr Spiegel Kamm Bürste Seife Handtuch Kleidung Hemd Hose Rock Kleid Jacke Mantel Schuh Stiefel Socke Mütze Hut Schal Handschuh Gürtel Tasche Koffer Schlüssel Geld Münze Schein Karte Brief Paket Zeitung Heft Stift Bleistift Kuli Lineal Schere Kleber Papier Ordner Mappe Computer Laptop Handy Telefon Radio Kamera Foto Film Musik Lied Tanz Spiel Sport Fußball Tennis Schwimmen Laufen Springen Klettern Radfahren Reiten Wandern Kochen Backen Malen Lesen Schreiben Rechnen Lernen Spielen Schlafen Essen Trinken Gehen Kommen Sehen Hören Sprechen Denken Fühlen Lachen Weinen Singen Tanzen Kind Baby Mann Frau Junge Mädchen Vater Mutter Bruder Schwester Oma Opa Onkel Tante Freund Nachbar Lehrer Arzt Polizist Feuerwehr Bein Arm Hand Kopf Auge Ohr Nase Mund Zahn Zunge Hals Schulter Rücken Bauch Knie Fuß Zeh Haar Haut Blut Knochen Herz Lunge Leber Magen Darm Gehirn Nerv Muskel`.split(/\s+/).filter(Boolean),
 
-let W = 0, H = 0, DPR = 1;
+  mittel: `Computer Fernseher Telefon Bibliothek Krankenhaus Flughafen Bahnhof Restaurant Supermarkt Apotheke Bäckerei Metzgerei Friseur Schule Universität Kindergarten Spielplatz Schwimmbad Stadion Kino Theater Museum Kirche Rathaus Brücke Tunnel Straße Autobahn Fahrrad Motorrad Lastwagen Traktor Hubschrauber Rakete Satellit Planet Galaxie Universum Wissenschaft Forschung Experiment Labor Chemie Physik Biologie Mathematik Geschichte Geographie Sprache Grammatik Vokabel Wörterbuch Übersetzung Erzählung Gedicht Roman Krimi Komödie Tragödie Schauspieler Regisseur Mikrofon Lautsprecher Kopfhörer Bildschirm Tastatur Drucker Scanner Internet Website Programm Software Hardware Datenbank Server Netzwerk Passwort Sicherheit Virenschutz Update Download Upload Nachricht Anruf Gespräch Diskussion Meinung Argument Beweis Frage Antwort Problem Lösung Idee Plan Projekt Ziel Erfolg Fehler Versuch Ergebnis Erfahrung Wissen Bildung Ausbildung Studium Prüfung Zeugnis Klasse Kurs Seminar Vorlesung Professor Student Schüler Hausaufgabe Pause Ferien Urlaub Reise Ausflug Wanderung Abenteuer Erlebnis Erinnerung Gefühl Emotion Freude Trauer Angst Mut Hoffnung Liebe Freundschaft Familie Verwandte Gesellschaft Gemeinschaft Kultur Tradition Religion Politik Wirtschaft Industrie Handwerk Landwirtschaft Technik Erfindung Entdeckung Fortschritt Zukunft Vergangenheit Gegenwart Augenblick Moment Sekunde Minute Stunde Woche Monat Jahr Jahrzehnt Jahrhundert Jahrtausend Zeitraum Kalender Datum Geburtstag Feiertag Wochenende Montag Dienstag Mittwoch Donnerstag Freitag Samstag Sonntag Januar Februar März April Juni Juli August September Oktober November Dezember Frühling Sommer Herbst Winter Morgen Mittag Abend Nacht Sonnenaufgang Sonnenuntergang Mondlicht Sternenhimmel Regenbogen Gewitter Blitz Donner Sturm Orkan Tornado Erdbeben Überschwemmung Dürre Hitze Kälte Frost Eis Schneefall Nebel Dunst Tau Reif`.split(/\s+/).filter(Boolean),
 
-function resize() {
-  DPR = Math.min(window.devicePixelRatio || 1, 2);
-  W = window.innerWidth;
-  H = window.innerHeight;
-  canvas.width = W * DPR;
-  canvas.height = H * DPR;
-  canvas.style.width = W + 'px';
-  canvas.style.height = H + 'px';
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-}
-window.addEventListener('resize', resize);
+  schwer: `Wahrscheinlichkeit Geschwindigkeit Möglichkeiten Verantwortung Zusammenarbeit Kommunikation Information Organisation Konzentration Motivation Kreativität Flexibilität Professionalität Persönlichkeit Eigenschaft Fähigkeit Fertigkeit Kenntnisse Erfahrungen Erkenntnisse Wissenschaftler Forscher Entdecker Erfinder Ingenieur Architekt Journalist Fotograf Musiker Komponist Dirigent Schriftsteller Dichter Maler Bildhauer Designer Programmierer Entwickler Administrator Assistent Manager Direktor Präsident Kanzler Minister Abgeordneter Bürgermeister Polizistin Feuerwehrfrau Krankenschwester Apotheker Zahnarzt Tierarzt Anwalt Richter Notar Steuerberater Buchhalter Verkäufer Kellner Bäcker Metzger Friseur Gärtner Landwirt Handwerker Tischler Schreiner Maurer Dachdecker Elektriker Installateur Mechaniker Schlosser Schweißer Bauingenieur Maschinenbau Elektrotechnik Mechatronik Informatik Pharmazie Psychologie Soziologie Philosophie Theologie Pädagogik Didaktik Methodik Rhetorik Orthografie Interpunktion Silbentrennung Großschreibung Kleinschreibung Rechtschreibung Zeichensetzung Inhaltsangabe Interpretation Charakterisierung Erörterung Stellungnahme Zusammenfassung Beschreibung Berichterstattung Dokumentation Präsentation Moderation Debatte Argumentation Widerlegung Begründung Schlussfolgerung Voraussetzung Bedingung Konsequenz Kausalität Statistik Analyse Synthese Hypothese Theorie Praxis Methode Strategie Taktik Konzept Struktur System Prozess Verfahren Technologie Innovation Revolution Evolution Transformation Modifikation Variation Kombination Integration Migration Immigration Emigration Population Generation Situation Position Funktion Reaktion Aktion Interaktion Kooperation Kollaboration Konfrontation Konflikt Kompromiss Konsens Dissens Diskurs Dialog Monolog Prolog Epilog Katalog Analogie Anomalie Symmetrie Asymmetrie Hierarchie Monarchie Demokratie Aristokratie Bürokratie Autokratie Theokratie Anarchie Oligarchie Plutokratie Meritokratie Technokratie Atmosphäre Stratosphäre Ionosphäre Biosphäre Ökosphäre Hydrosphäre Lithosphäre`.split(/\s+/).filter(Boolean),
 
-// ============ TUNING ============
-const ORBIT_RADIUS = 55;
-const ORBIT_SPEED = 2.8;
-const FLY_SPEED = 340;
-const CAPTURE_PAD = 25;
-const MIN_PLANET_DIST = 260;
-const MAX_PLANET_DIST = 400;
-const MAX_PLANET_Y_OFF = 150;
-const MAX_FLY_TIME = 3.5;
-const TRAIL_LIFETIME = 0.55;
-const PREVIEW_LENGTH = 520;
-
-// ============ STATE ============
-const G = {
-  mode: 'menu',
-  score: 0,
-  best: parseInt(localStorage.getItem('orbital-best') || '0'),
-  time: 0,
-  player: null,
-  planets: [],
-  particles: [],
-  popups: [],
-  stars: [],
-  camera: { x: 0, y: 0 },
-  flash: 0,
-  shake: 0,
-  flyingTime: 0,
+  unmöglich: `Hilfeleistungslöschgruppenfahrzeug Rindfleischetikettierungsüberwachungsaufgabenübertragungsgesetz Donaudampfschifffahrtsgesellschaftskapitän Rechtsschutzversicherungsgesellschaften Bundesausbildungsförderungsgesetz Kraftfahrzeughaftpflichtversicherung Arbeiterunfallversicherungsgesetz Lebensmittelverschwendungsverordnung Bundesdatenschutzbeauftragter Datenschutzgrundverordnung Grundstücksverkehrsgenehmigungszuständigkeitsübertragungsverordnung Krankenversicherungsbeitragssatz Krankenversicherungsbeitragsbemessungsgrenze Rentenversicherungsbeitragssatz Pflegeversicherungsbeitrag Arbeitslosenversicherungsbeitrag Sozialversicherungsbeitrag Sozialversicherungsträger Sozialversicherungsnummer Sozialversicherungsausweis Sozialversicherungssystem Sozialversicherungsrecht Sozialversicherungsgesetz Sozialversicherungsanstalt Sozialversicherungskasse Einkommensteuererklärung Einkommensteuergesetz Einkommensteuertarif Einkommensteuervorauszahlung Einkommensteuerbescheid Einkommensteuerpflicht Einkommensteuerhinterziehung Einkommensteuerreform Körperschaftsteuererklärung Gewerbesteuererklärung Umsatzsteuererklärung Umsatzsteuervoranmeldung Umsatzsteueridentifikationsnummer Umsatzsteuergesetz Umsatzsteuerpflicht Umsatzsteuerbefreiung Umsatzsteuererstattung Krankenhausfinanzierungsgesetz Krankenhausbehandlungsfehler Krankenhausentlassungsmanagement Krankenhaushygieneverordnung Krankenhausnotaufnahme Krankenhausverwaltung Krankenhausapotheke Bundesverkehrsministerium Bundesumweltministerium Bundesgesundheitsministerium Bundesbildungsministerium Bundesfinanzministerium Bundesarbeitsministerium Bundeswirtschaftsministerium Bundeslandwirtschaftsministerium Bundesverteidigungsministerium Bundesinnenministerium Bundesjustizministerium Bundesfamilienministerium Bundesentwicklungsministerium Weltgesundheitsorganisation Welternährungsorganisation Weltraumforschungsorganisation Atomkraftwerksbetreiber Atomkraftwerkssicherheit Atomkraftwerksunfall Atomkraftwerksstandort Atommüllendlager Atommülltransport Atommüllentsorgung Atommülllagerung Atommüllzwischenlager Gentechnikgesetz Gentechnikverordnung Gentechnologie Gentechniklabor Gentechnikforschung Gentechnikunternehmen Gentechnikkritiker Gentechnikbefürworter Klimaschutzabkommen Klimaschutzgesetz Klimaschutzziel Klimaschutzpolitik Klimaschutzmaßnahme Klimaschutzprogramm Klimaschutzkonferenz Klimawandelforschung Klimawandelanpassung Klimawandelauswirkung Klimawandelbekämpfung Klimawandelkonferenz Klimawandelmodell Klimawandelprognose Klimawandelstudie Klimawandelbericht Umweltverschmutzung Umweltschutzorganisation Umweltschutzgesetz Umweltschutzbehörde Umweltschutzministerium Umweltschutzmaßnahme Umweltschutztechnik Umweltschutzpolitik Umweltschutzbeauftragter Umweltschutzverband Umweltschutzaktivist Umweltschutzingenieur Umweltschutzkonferenz Donaudampfschifffahrtsgesellschaft Donaudampfschifffahrtskapitän Donaudampfschifffahrtsgesellschaftskapitän Donaudampfschifffahrtsgesellschaftskapitänswitwe Donaudampfschifffahrtsgesellschaftskapitänswitwenrente Donaudampfschifffahrtsgesellschaftskapitänskajüte Donaudampfschifffahrtsgesellschaftskapitänsmütze Donaudampfschifffahrtsgesellschaftskapitänsuniform Schifffahrtsgesellschaft Schifffahrtsgesellschaftskapitän Schifffahrtsgesellschaftsmitarbeiter Schifffahrtsgesellschaftsvorstand Schifffahrtsgesellschaftsaktie Schifffahrtsgesellschaftsbüro Schifffahrtsgesellschaftsgebäude Rechtschreibprüfung Rechtschreibfehler Rechtschreibkorrektur Rechtschreibregel Rechtschreibreform Rechtschreibschwäche Rechtschreibprogramm Rechtschreibprüfungsprogramm Rechtschreibkorrekturprogramm Rechtschreibfehlerkorrektur Krankenversicherungskarte Krankenversicherungsnummer Krankenversicherungsbeitrag Krankenversicherungsschutz Krankenversicherungsgesellschaft Krankenversicherungsvertrag Krankenversicherungsprämie Krankenversicherungssystem Krankenversicherungspflicht Krankenversicherungspflichtgrenze Kraftfahrzeugzulassungsstelle Kraftfahrzeugzulassungsbehörde Fahrzeugidentifikationsnummer Fahrzeugsicherheitskontrollsystem Verkehrszeichenerkennungssystem Verkehrssicherheitsbehörde Verkehrsunfallflucht Verkehrssicherheitsrat Verkehrserziehungsunterricht Verkehrsberuhigungsmaßnahme Verkehrsleitsystem Verkehrsministerium Verkehrsflugzeug Verkehrskontrolle Verkehrspolizei Straßenverkehrsordnung Straßenverkehrsamt Straßenverkehrsgesetz Straßenverkehrsbehörde Straßenverkehrsgefährdung Straßenbahnfahrer Straßenbahnhaltestelle Straßenbahngesellschaft Straßenbahnverkehr Straßenbahnunfall Straßenbahnfahrplan`.split(/\s+/).filter(Boolean),
 };
 
-// ============ HELPERS ============
-const rand = (a, b) => a + Math.random() * (b - a);
-const lerp = (a, b, t) => a + (b - a) * t;
+// ============================================================
+//  STATE
+// ============================================================
+const SESSION_LENGTH = 25;
 
-// ============ COLORS ============
-const PALETTE = [
-  { main: '#00e5ff', dark: '#0077aa', glow: 'rgba(0,229,255,0.75)' },
-  { main: '#ff2bb8', dark: '#aa0066', glow: 'rgba(255,43,184,0.75)' },
-  { main: '#aaff00', dark: '#669900', glow: 'rgba(170,255,0,0.75)' },
-  { main: '#ff8800', dark: '#aa4400', glow: 'rgba(255,136,0,0.75)' },
-  { main: '#aa55ff', dark: '#6600cc', glow: 'rgba(170,85,255,0.75)' },
-  { main: '#ff3344', dark: '#aa0011', glow: 'rgba(255,51,68,0.75)' },
-];
+const state = {
+  screen: 'menu',
+  difficulty: 'einfach',
+  wordPool: [],
+  currentIndex: 0,
+  currentWord: '',
+  input: '',
+  lastInputLength: 0,
+  wordsCompleted: 0,
+  totalErrors: 0,
+  totalCharsTyped: 0,
+  streak: 0,
+  bestStreak: 0,
+  startTime: null,
+  sessionComplete: false,
+};
 
-// ============ FACTORIES ============
-function makePlanet(x, y, radius) {
-  const c = PALETTE[(Math.random() * PALETTE.length) | 0];
-  return {
-    x, y, radius, color: c,
-    rotation: Math.random() * Math.PI * 2,
-    rotationSpeed: rand(-0.5, 0.5),
-  };
-}
+// ============================================================
+//  DOM
+// ============================================================
+const menuEl = document.getElementById('menu');
+const playEl = document.getElementById('play');
+const resultsEl = document.getElementById('results');
+const wordDisplayEl = document.getElementById('wordDisplay');
+const hiddenInput = document.getElementById('hiddenInput');
+const quitBtn = document.getElementById('quitBtn');
+const menuBtn = document.getElementById('menuBtn');
+const progressFill = document.getElementById('progressFill');
+const wordProgressEl = document.getElementById('wordProgress');
+const accuracyValEl = document.getElementById('accuracyVal');
+const streakValEl = document.getElementById('streakVal');
+const resultWords = document.getElementById('resultWords');
+const resultAccuracy = document.getElementById('resultAccuracy');
+const resultStreak = document.getElementById('resultStreak');
+const resultTime = document.getElementById('resultTime');
 
-function makePlayer(planet) {
-  return {
-    x: planet.x,
-    y: planet.y - ORBIT_RADIUS,
-    vx: 0, vy: 0,
-    mode: 'orbit',
-    planet,
-    sourcePlanet: null, // Planet, von dem wir zuletzt losgeflogen sind
-    angle: -Math.PI / 2,
-    orbitRadius: ORBIT_RADIUS,
-    trail: [],
-    radius: 9,
-  };
-}
-
-function makeStars() {
-  const stars = [];
-  for (let i = 0; i < 130; i++) {
-    stars.push({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight,
-      size: Math.random() * 1.6 + 0.3,
-      alpha: Math.random() * 0.7 + 0.2,
-      twinkle: Math.random() * Math.PI * 2,
-    });
+// ============================================================
+//  HELPERS
+// ============================================================
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = (Math.random() * (i + 1)) | 0;
+    [a[i], a[j]] = [a[j], a[i]];
   }
-  return stars;
+  return a;
 }
 
-function makeParticle(x, y, o = {}) {
-  const angle = o.angle !== undefined ? o.angle : Math.random() * Math.PI * 2;
-  const speed = o.speed !== undefined ? o.speed : rand(40, 180);
-  const life = o.life !== undefined ? o.life : rand(0.4, 0.9);
-  return {
-    x, y,
-    vx: Math.cos(angle) * speed,
-    vy: Math.sin(angle) * speed,
-    life, maxLife: life,
-    size: o.size || rand(1.5, 3.5),
-    color: o.color || '#fff',
-    drag: o.drag !== undefined ? o.drag : 0.93,
-    ring: o.ring || false,
-  };
+function show(screen) {
+  state.screen = screen;
+  menuEl.classList.toggle('hidden', screen !== 'menu');
+  playEl.classList.toggle('hidden', screen !== 'play');
+  resultsEl.classList.toggle('hidden', screen !== 'results');
 }
 
-// ============ SPAWNING ============
-function spawnNextPlanet() {
-  const last = G.planets[G.planets.length - 1];
-  let p;
-  if (!last) {
-    p = makePlanet(0, 0, rand(30, 42));
-  } else {
-    const d = rand(MIN_PLANET_DIST, MAX_PLANET_DIST);
-    const dy = rand(-MAX_PLANET_Y_OFF, MAX_PLANET_Y_OFF);
-    p = makePlanet(last.x + d, last.y + dy, rand(28, 42));
+// ============================================================
+//  GAME LOGIC
+// ============================================================
+function startGame(difficulty) {
+  state.difficulty = difficulty;
+  state.wordPool = shuffle(WORDS[difficulty]);
+  state.currentIndex = 0;
+  state.currentWord = state.wordPool[0];
+  state.input = '';
+  state.lastInputLength = 0;
+  state.wordsCompleted = 0;
+  state.totalErrors = 0;
+  state.totalCharsTyped = 0;
+  state.streak = 0;
+  state.bestStreak = 0;
+  state.startTime = Date.now();
+  state.sessionComplete = false;
+
+  hiddenInput.value = '';
+  updateHUD();
+  renderWord();
+  show('play');
+
+  // Fokus setzen (mobile keyboard öffnen)
+  setTimeout(() => hiddenInput.focus(), 50);
+}
+
+function renderWord() {
+  const target = state.currentWord;
+  const input = state.input;
+  let html = '';
+  for (let i = 0; i < target.length; i++) {
+    let cls = 'char';
+    if (i < input.length) {
+      if (input[i].toLowerCase() === target[i].toLowerCase()) {
+        cls += ' correct';
+      } else {
+        cls += ' wrong';
+      }
+    } else if (i === input.length) {
+      cls += ' current';
+    }
+    const ch = target[i] === ' ' ? '&nbsp;' : escapeHtml(target[i]);
+    html += `<span class="${cls}">${ch}</span>`;
   }
-  G.planets.push(p);
-  return p;
+  wordDisplayEl.innerHTML = html;
 }
 
-// ============ RESET ============
-function resetGame() {
-  G.mode = 'playing';
-  G.score = 0;
-  G.time = 0;
-  G.planets = [];
-  G.particles = [];
-  G.popups = [];
-  G.flash = 0;
-  G.shake = 0;
-  G.flyingTime = 0;
-  G.stars = makeStars();
-
-  const p = spawnNextPlanet();
-  G.player = makePlayer(p);
-  G.camera.x = p.x;
-  G.camera.y = p.y;
-
-  for (let i = 0; i < 5; i++) spawnNextPlanet();
-
-  scoreEl.textContent = '0';
-  menuEl.classList.add('hidden');
-  gameoverEl.classList.add('hidden');
+function escapeHtml(c) {
+  if (c === '&') return '&amp;';
+  if (c === '<') return '&lt;';
+  if (c === '>') return '&gt;';
+  return c;
 }
 
-// ============ INPUT ============
-let tapLock = false;
+function updateHUD() {
+  wordProgressEl.textContent = Math.min(state.wordsCompleted + 1, SESSION_LENGTH) + '/' + SESSION_LENGTH;
+  const totalTyped = state.totalCharsTyped + state.totalErrors;
+  const acc = totalTyped === 0 ? 100 : Math.max(0, Math.round((state.totalCharsTyped / totalTyped) * 100));
+  accuracyValEl.textContent = acc + '%';
+  streakValEl.textContent = state.streak;
+  const pct = (state.wordsCompleted / SESSION_LENGTH) * 100;
+  progressFill.style.width = pct + '%';
+}
 
-function onTap(e) {
-  if (e && e.cancelable) e.preventDefault();
-  if (tapLock) return;
-  tapLock = true;
-  setTimeout(() => { tapLock = false; }, 60);
+function onWordComplete() {
+  // Absolutes Wort abgeschlossen
+  state.wordsCompleted++;
+  state.streak++;
+  if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+  state.totalCharsTyped += state.currentWord.length;
 
-  if (G.mode === 'menu' || G.mode === 'gameover') {
-    resetGame();
+  // Animation
+  wordDisplayEl.classList.add('complete');
+
+  // Nächstes Wort
+  state.currentIndex++;
+  if (state.currentIndex >= state.wordPool.length) {
+    // Pool neu mischen
+    state.wordPool = shuffle(WORDS[state.difficulty]);
+    state.currentIndex = 0;
+  }
+
+  if (state.wordsCompleted >= SESSION_LENGTH) {
+    state.sessionComplete = true;
+    setTimeout(endGame, 350);
     return;
   }
-  if (G.mode !== 'playing') return;
-  const p = G.player;
-  if (!p || p.mode !== 'orbit') return;
 
-  const t = p.angle;
-  p.vx = -Math.sin(t) * FLY_SPEED;
-  p.vy = Math.cos(t) * FLY_SPEED;
-  p.mode = 'fly';
-  // WICHTIG: Wir merken uns, von welchem Planeten wir gerade gestartet sind,
-  // damit wir nicht sofort wieder von ihm eingefangen werden.
-  p.sourcePlanet = p.planet;
-  G.flyingTime = 0;
+  state.currentWord = state.wordPool[state.currentIndex];
+  state.input = '';
+  state.lastInputLength = 0;
+  hiddenInput.value = '';
 
-  const dirA = Math.atan2(p.vy, p.vx) + Math.PI;
-  for (let i = 0; i < 14; i++) {
-    G.particles.push(makeParticle(p.x, p.y, {
-      angle: dirA + rand(-0.6, 0.6),
-      speed: rand(60, 220),
-      life: rand(0.3, 0.6),
-      color: '#ffffff',
-      size: rand(1.5, 3),
-    }));
-  }
+  setTimeout(() => {
+    wordDisplayEl.classList.remove('complete');
+    renderWord();
+    updateHUD();
+  }, 220);
 }
 
-document.addEventListener('pointerdown', onTap, { passive: false });
-document.addEventListener('mousedown', (e) => { if (!window.PointerEvent) onTap(e); }, { passive: false });
-document.addEventListener('touchstart', (e) => { if (!window.PointerEvent) onTap(e); }, { passive: false });
-document.addEventListener('keydown', (e) => {
-  if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'Enter') {
+function endGame() {
+  const elapsed = (Date.now() - state.startTime) / 1000;
+  const totalTyped = state.totalCharsTyped + state.totalErrors;
+  const acc = totalTyped === 0 ? 100 : Math.max(0, Math.round((state.totalCharsTyped / totalTyped) * 100));
+
+  resultWords.textContent = state.wordsCompleted;
+  resultAccuracy.textContent = acc + '%';
+  resultStreak.textContent = state.bestStreak;
+  resultTime.textContent = elapsed.toFixed(1) + 's';
+
+  show('results');
+}
+
+// ============================================================
+//  INPUT HANDLING
+// ============================================================
+hiddenInput.addEventListener('input', (e) => {
+  if (state.sessionComplete) return;
+
+  const val = e.target.value;
+  const target = state.currentWord;
+
+  // Komplett richtig?
+  if (val.toLowerCase() === target.toLowerCase()) {
+    state.input = val;
+    renderWord();
+    onWordComplete();
+    return;
+  }
+
+  // Neue Zeichen zählen (nur bei Zunahme der Länge)
+  if (val.length > state.lastInputLength) {
+    let newErrors = 0;
+    for (let i = state.lastInputLength; i < val.length; i++) {
+      if (i < target.length && val[i].toLowerCase() !== target[i].toLowerCase()) {
+        newErrors++;
+      } else if (i >= target.length) {
+        newErrors++;
+      }
+    }
+    if (newErrors > 0) {
+      state.totalErrors += newErrors;
+      state.streak = 0;
+      wordDisplayEl.classList.add('shake');
+      setTimeout(() => wordDisplayEl.classList.remove('shake'), 360);
+    }
+  }
+
+  state.lastInputLength = val.length;
+  state.input = val;
+  renderWord();
+  updateHUD();
+});
+
+// Verhindere Cursor-Bewegungen, die das input-Feld verwirren
+hiddenInput.addEventListener('keydown', (e) => {
+  // Erlaube nur Backspace und normales Tippen
+  if (e.key === 'Enter') {
     e.preventDefault();
-    onTap();
   }
 });
 
-// ============ GAME OVER ============
-function gameOver() {
-  G.mode = 'gameover';
-  G.shake = 14;
-  if (G.score > G.best) {
-    G.best = G.score;
-    localStorage.setItem('orbital-best', G.best);
+// Tippen irgendwo auf den Play-Screen fokussiert das Input-Feld
+playEl.addEventListener('pointerdown', (e) => {
+  if (state.screen === 'play' && e.target.tagName !== 'BUTTON') {
+    e.preventDefault();
+    hiddenInput.focus();
   }
-  finalScoreEl.textContent = G.score;
-  bestScoreEl.textContent = 'BEST: ' + G.best;
-  gameoverEl.classList.remove('hidden');
+});
 
-  const p = G.player;
-  if (p) {
-    for (let i = 0; i < 44; i++) {
-      G.particles.push(makeParticle(p.x, p.y, {
-        angle: Math.random() * Math.PI * 2,
-        speed: rand(100, 420),
-        life: rand(0.6, 1.3),
-        color: i % 3 === 0 ? '#ff3366' : (i % 3 === 1 ? '#ffffff' : '#ffaa00'),
-        size: rand(2, 4.5),
-      }));
-    }
-  }
-}
-
-// ============ CAPTURE ============
-function capturePlayer(planet, dx, dy) {
-  const p = G.player;
-  p.planet = planet;
-  p.mode = 'orbit';
-  p.angle = Math.atan2(dy, dx);
-  p.orbitRadius = Math.max(Math.sqrt(dx * dx + dy * dy), planet.radius + 22);
-  p.vx = 0;
-  p.vy = 0;
-  p.trail = [];
-  p.sourcePlanet = null;
-
-  G.score += 10;
-  scoreEl.textContent = G.score;
-  G.flash = 0.55;
-  G.shake = 6;
-
-  const c = planet.color.main;
-  for (let i = 0; i < 22; i++) {
-    G.particles.push(makeParticle(p.x, p.y, {
-      angle: (i / 22) * Math.PI * 2,
-      speed: rand(80, 260),
-      life: rand(0.4, 0.85),
-      color: c,
-      size: rand(1.5, 3.5),
-    }));
-  }
-  G.particles.push(makeParticle(p.x, p.y, {
-    angle: 0, speed: 0, life: 0.45,
-    color: c, size: 12, ring: true, drag: 1,
-  }));
-
-  // Score-Popup "+10"
-  G.popups.push({
-    x: p.x,
-    y: p.y - 20,
-    text: '+10',
-    life: 1.0,
-    maxLife: 1.0,
-    color: c,
+// ============================================================
+//  EVENT LISTENERS
+// ============================================================
+document.querySelectorAll('.diff-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    startGame(btn.dataset.diff);
   });
+});
 
-  while (G.planets.length < 6) spawnNextPlanet();
+quitBtn.addEventListener('click', () => {
+  show('menu');
+  hiddenInput.blur();
+});
 
-  while (G.planets.length > 8 && G.planets[0] !== planet) {
-    G.planets.shift();
+menuBtn.addEventListener('click', () => {
+  show('menu');
+});
+
+// Verhindere, dass das Input-Feld jemals den Fokus verliert während des Spiels
+hiddenInput.addEventListener('blur', () => {
+  if (state.screen === 'play' && !state.sessionComplete) {
+    setTimeout(() => hiddenInput.focus(), 10);
   }
-}
-
-// ============ UPDATE ============
-function update(dt) {
-  G.time += dt;
-  G.flash = Math.max(0, G.flash - dt * 4);
-  G.shake = Math.max(0, G.shake - dt * 30);
-
-  if (G.mode === 'playing') {
-    updatePlayer(dt);
-    updateParticles(dt);
-    updateCamera(dt);
-  } else {
-    updateParticles(dt);
-  }
-
-  // Popups
-  for (const pp of G.popups) {
-    pp.y -= dt * 55;
-    pp.life -= dt;
-  }
-  G.popups = G.popups.filter(pp => pp.life > 0);
-
-  for (const s of G.stars) s.twinkle += dt * 2;
-}
-
-function updatePlayer(dt) {
-  const p = G.player;
-  if (!p) return;
-
-  if (p.mode === 'orbit') {
-    p.angle += ORBIT_SPEED * dt;
-    p.orbitRadius = lerp(p.orbitRadius, ORBIT_RADIUS, Math.min(1, dt * 6));
-    p.x = p.planet.x + p.orbitRadius * Math.cos(p.angle);
-    p.y = p.planet.y + p.orbitRadius * Math.sin(p.angle);
-    p.planet.rotation += p.planet.rotationSpeed * dt;
-
-  } else if (p.mode === 'fly') {
-    p.x += p.vx * dt;
-    p.y += p.vy * dt;
-    G.flyingTime += dt;
-
-    // Capture-Check: Wir überspringen den Planeten, von dem wir gerade gestartet sind!
-    for (const planet of G.planets) {
-      if (planet === p.sourcePlanet) continue; // <-- DER FIX
-
-      const dx = p.x - planet.x;
-      const dy = p.y - planet.y;
-      const d2 = dx * dx + dy * dy;
-      const capR = planet.radius + ORBIT_RADIUS + CAPTURE_PAD;
-      if (d2 < capR * capR) {
-        capturePlayer(planet, dx, dy);
-        return;
-      }
-    }
-
-    if (G.flyingTime > MAX_FLY_TIME) {
-      gameOver();
-      return;
-    }
-
-    p.trail.push({ x: p.x, y: p.y, t: 0 });
-    for (const tr of p.trail) tr.t += dt;
-    p.trail = p.trail.filter(tr => tr.t < TRAIL_LIFETIME);
-
-    if (Math.random() < 0.65) {
-      G.particles.push(makeParticle(p.x, p.y, {
-        angle: Math.atan2(-p.vy, -p.vx) + rand(-0.5, 0.5),
-        speed: rand(20, 80),
-        life: rand(0.3, 0.7),
-        color: '#ffee88',
-        size: rand(1, 2.5),
-      }));
-    }
-  }
-}
-
-function updateParticles(dt) {
-  for (const pt of G.particles) {
-    pt.x += pt.vx * dt;
-    pt.y += pt.vy * dt;
-    pt.vx *= Math.pow(pt.drag, dt * 60);
-    pt.vy *= Math.pow(pt.drag, dt * 60);
-    pt.life -= dt;
-    if (pt.ring) pt.size += dt * 220;
-  }
-  G.particles = G.particles.filter(p => p.life > 0);
-}
-
-function updateCamera(dt) {
-  const p = G.player;
-  if (!p) return;
-  const smooth = 1 - Math.pow(0.008, dt);
-  G.camera.x = lerp(G.camera.x, p.x, smooth);
-  G.camera.y = lerp(G.camera.y, p.y, smooth);
-}
-
-// ============ RENDER ============
-function w2s(wx, wy) {
-  return { x: wx - G.camera.x + W / 2, y: wy - G.camera.y + H / 2 };
-}
-
-function render() {
-  ctx.save();
-
-  if (G.shake > 0.1) {
-    ctx.translate(rand(-G.shake, G.shake), rand(-G.shake, G.shake));
-  }
-
-  const bg = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.85);
-  bg.addColorStop(0, '#0d1424');
-  bg.addColorStop(1, '#050810');
-  ctx.fillStyle = bg;
-  ctx.fillRect(-30, -30, W + 60, H + 60);
-
-  for (const s of G.stars) {
-    const tw = 0.7 + Math.sin(s.twinkle) * 0.3;
-    ctx.globalAlpha = s.alpha * tw;
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-
-  for (const planet of G.planets) drawPlanet(planet);
-
-  for (const pt of G.particles) {
-    const sp = w2s(pt.x, pt.y);
-    const a = Math.max(0, pt.life / pt.maxLife);
-    ctx.globalAlpha = a;
-    if (pt.ring) {
-      ctx.strokeStyle = pt.color;
-      ctx.lineWidth = 3 * a;
-      ctx.beginPath();
-      ctx.arc(sp.x, sp.y, pt.size, 0, Math.PI * 2);
-      ctx.stroke();
-    } else {
-      ctx.fillStyle = pt.color;
-      ctx.beginPath();
-      ctx.arc(sp.x, sp.y, pt.size * a, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-  ctx.globalAlpha = 1;
-
-  if (G.player) drawPlayer(G.player);
-
-  // Score-Popups
-  for (const pp of G.popups) {
-    const sp = w2s(pp.x, pp.y);
-    const a = Math.min(1, pp.life / pp.maxLife * 1.5);
-    ctx.globalAlpha = a;
-    ctx.font = 'bold 24px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = pp.color;
-    ctx.shadowColor = pp.color;
-    ctx.shadowBlur = 12;
-    ctx.fillText(pp.text, sp.x, sp.y);
-    ctx.shadowBlur = 0;
-  }
-  ctx.globalAlpha = 1;
-
-  if (G.flash > 0) {
-    ctx.fillStyle = `rgba(255,255,255,${G.flash * 0.4})`;
-    ctx.fillRect(-60, -60, W + 120, H + 120);
-  }
-
-  ctx.restore();
-}
-
-function drawPlanet(planet) {
-  const sp = w2s(planet.x, planet.y);
-  const r = planet.radius;
-  if (sp.x < -r * 3 - 100 || sp.x > W + r * 3 + 100 ||
-      sp.y < -r * 3 - 100 || sp.y > H + r * 3 + 100) return;
-
-  const grd = ctx.createRadialGradient(sp.x, sp.y, r * 0.6, sp.x, sp.y, r * 3.2);
-  grd.addColorStop(0, planet.color.glow);
-  grd.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = grd;
-  ctx.beginPath();
-  ctx.arc(sp.x, sp.y, r * 3.2, 0, Math.PI * 2);
-  ctx.fill();
-
-  const body = ctx.createRadialGradient(
-    sp.x - r * 0.3, sp.y - r * 0.35, r * 0.1,
-    sp.x, sp.y, r
-  );
-  body.addColorStop(0, planet.color.main);
-  body.addColorStop(1, planet.color.dark);
-  ctx.fillStyle = body;
-  ctx.beginPath();
-  ctx.arc(sp.x, sp.y, r, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.save();
-  ctx.translate(sp.x, sp.y);
-  ctx.rotate(planet.rotation);
-  ctx.strokeStyle = 'rgba(255,255,255,0.28)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(0, 0, r * 0.6, 0, Math.PI * 1.35);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(0, 0, r * 0.35, Math.PI, Math.PI * 2.15);
-  ctx.stroke();
-  ctx.restore();
-
-  if (G.player && G.player.mode === 'orbit' && G.player.planet === planet) {
-    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-    ctx.lineWidth = 1;
-    ctx.setLineDash([4, 7]);
-    ctx.beginPath();
-    ctx.arc(sp.x, sp.y, ORBIT_RADIUS, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
-}
-
-function drawPlayer(p) {
-  const sp = w2s(p.x, p.y);
-
-  for (const tr of p.trail) {
-    const a = 1 - tr.t / TRAIL_LIFETIME;
-    const s = w2s(tr.x, tr.y);
-    ctx.globalAlpha = a * 0.55;
-    ctx.fillStyle = '#ffee88';
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, p.radius * a * 0.9, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-
-  const glow = ctx.createRadialGradient(sp.x, sp.y, 0, sp.x, sp.y, p.radius * 4.5);
-  glow.addColorStop(0, 'rgba(255,255,200,0.8)');
-  glow.addColorStop(1, 'rgba(255,255,200,0)');
-  ctx.fillStyle = glow;
-  ctx.beginPath();
-  ctx.arc(sp.x, sp.y, p.radius * 4.5, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.arc(sp.x, sp.y, p.radius, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#ffee88';
-  ctx.beginPath();
-  ctx.arc(sp.x, sp.y, p.radius * 0.55, 0, Math.PI * 2);
-  ctx.fill();
-
-  if (p.mode === 'orbit') {
-    const t = p.angle;
-    const dirX = -Math.sin(t);
-    const dirY = Math.cos(t);
-    const s = w2s(p.x, p.y);
-    const e = w2s(p.x + dirX * PREVIEW_LENGTH, p.y + dirY * PREVIEW_LENGTH);
-
-    ctx.strokeStyle = 'rgba(255,255,255,0.42)';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([7, 9]);
-    ctx.beginPath();
-    ctx.moveTo(s.x, s.y);
-    ctx.lineTo(e.x, e.y);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    const ang = Math.atan2(e.y - s.y, e.x - s.x);
-    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(e.x, e.y);
-    ctx.lineTo(e.x - Math.cos(ang - 0.4) * 16, e.y - Math.sin(ang - 0.4) * 16);
-    ctx.moveTo(e.x, e.y);
-    ctx.lineTo(e.x - Math.cos(ang + 0.4) * 16, e.y - Math.sin(ang + 0.4) * 16);
-    ctx.stroke();
-  }
-}
-
-// ============ LOOP ============
-let lastTime = performance.now();
-function loop(now) {
-  const dt = Math.min((now - lastTime) / 1000, 0.05);
-  lastTime = now;
-  update(dt);
-  render();
-  requestAnimationFrame(loop);
-}
-
-// ============ START ============
-resize();
-G.stars = makeStars();
-requestAnimationFrame(loop);
+});
 
 })();
 </script>
