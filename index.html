@@ -3,441 +3,265 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Luis - APB System</title>
+    <title>Flappy Bird Clone</title>
     <style>
-        /* Design passend zum Bild */
-        body {
-            background-color: #121212; /* Dunkler Hintergrund */
-            color: #ffffff;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        /* --- CSS (Design & Layout) --- */
+        * {
             margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        h1 {
-            color: #ffffff;
-            margin-bottom: 5px;
-            font-size: 2em;
-        }
-
-        h2 {
-            color: #f0b132; /* Gelb/Gold */
-            margin-top: 0;
-            margin-bottom: 25px;
-            font-size: 1.2em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .input-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            width: 100%;
-            max-width: 500px;
-        }
-
-        input[type="text"] {
-            flex: 1;
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid #333;
-            background-color: #2c2f33;
-            color: white;
-            font-size: 16px;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #f0b132;
-        }
-
-        button {
-            padding: 12px 20px;
-            border-radius: 6px;
-            border: none;
-            background-color: #f0b132;
-            color: #121212;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.2s;
-        }
-
-        button:hover {
-            background-color: #dca01f;
-        }
-
-        .notes-container {
-            width: 100%;
-            max-width: 500px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        /* Design der APB Karten */
-        .note-card {
-            background-color: #2c2f33;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            text-align: left;
-            position: relative;
-        }
-
-        .note-card .apb-title {
-            color: #f0b132;
-            font-weight: 800;
-            font-size: 1.1em;
-            margin-bottom: 8px;
-            letter-spacing: 0.5px;
-        }
-
-        .note-card .note-text {
-            color: #e0e0e0;
-            font-size: 1em;
-            margin-bottom: 10px;
-            line-height: 1.4;
-        }
-
-        .note-card .note-meta {
-            color: #72767d;
-            font-size: 0.85em;
-        }
-
-        /* Admin Steuerung Design */
-        .admin-controls {
-            margin-top: 12px;
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn-small {
-            padding: 6px 12px;
-            font-size: 12px;
-            border-radius: 4px;
-        }
-
-        .btn-delete {
-            background-color: #e74c3c;
-            color: white;
-        }
-        .btn-delete:hover { background-color: #c0392b; }
-
-        .btn-edit {
-            background-color: #3498db;
-            color: white;
-        }
-        .btn-edit:hover { background-color: #2980b9; }
-
-        /* Der UNSICHTBARE Login-Button oben rechts */
-        #adminTrigger {
-            position: fixed;
-            top: 0;
-            right: 0;
-            width: 60px;
-            height: 60px;
-            z-index: 9999;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            color: transparent; /* Text unsichtbar machen */
-        }
-        /* Entfernt den Hover-Effekt für den unsichtbaren Button */
-        #adminTrigger:hover {
-            background: transparent;
-        }
-
-        /* NEU: Modal (Fenster) für Generelle Informationen */
-        .modal {
-            display: none; 
-            position: fixed; 
-            z-index: 10000; 
-            left: 0;
-            top: 0;
-            width: 100%; 
-            height: 100%; 
-            background-color: rgba(0,0,0,0.8); /* Dunkler Hintergrund */
-            backdrop-filter: blur(3px);
-        }
-
-        .modal-content {
-            background-color: #2c2f33;
-            margin: 15% auto; 
-            padding: 20px;
-            border: 1px solid #444;
-            border-radius: 8px;
-            width: 80%;
-            max-width: 500px;
-            position: relative;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            line-height: 1;
-        }
-
-        .close:hover { color: white; }
-
-        #infoText {
-            width: 100%;
-            height: 150px;
-            background-color: #1e2124;
-            color: white;
-            border: 1px solid #444;
-            border-radius: 6px;
-            padding: 10px;
+            padding: 0;
             box-sizing: border-box;
-            font-family: inherit;
-            resize: vertical;
-            margin-top: 15px;
-            font-size: 15px;
         }
 
-        #infoText:focus { outline: none; border-color: #f0b132; }
-        #infoText:read-only { opacity: 0.7; cursor: not-allowed; border-color: #333; }
-        
-        #saveInfoBtn {
-            margin-top: 15px;
-            width: 100%;
+        body {
+            background-color: #1a2233; /* Dunkelblau aus dem Bild */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+        }
+
+        canvas {
+            background-color: #1a2233;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            max-width: 100%;
+            max-height: 100%;
+            /* Verhindert ungewolltes Markieren auf Handys */
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
         }
     </style>
 </head>
 <body>
 
-    <!-- UNSICHTBARER Login-Button oben rechts -->
-    <button id="adminTrigger" onclick="handleAdminAuth()">Login</button>
+    <!-- Das Spielfeld -->
+    <canvas id="gameCanvas"></canvas>
 
-    <h1>Luis</h1>
-    <h2>APB System</h2>
+    <script>
+        /* --- JavaScript (Spiel-Logik) --- */
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
-    <!-- Button für Generelle Informationen (Jetzt im Standard-Orange) -->
-    <button onclick="openInfoModal()" style="margin-bottom: 25px; width: 100%; max-width: 500px;">Generelle Informationen</button>
+        // Feste Größe für das Spielfenster
+        canvas.width = 800;
+        canvas.height = 500;
 
-    <div class="input-container">
-        <input type="text" id="noteInput" placeholder="Notiz eingeben (z.B. Test)...">
-        <button onclick="addNote()">Senden</button>
-    </div>
-
-    <div class="notes-container" id="notesContainer">
-        <!-- Hier werden die Notizen automatisch eingefügt -->
-    </div>
-
-    <!-- Das Modal (Fenster) für die Informationen -->
-    <div id="infoModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeInfoModal()">&times;</span>
-            <h3 style="margin-top: 0; color: #f0b132;">Informationen</h3>
-            <textarea id="infoText" readonly placeholder="Noch keine Informationen vorhanden..."></textarea>
-            <button id="saveInfoBtn" onclick="saveInfo()" style="display: none;">Speichern</button>
-        </div>
-    </div>
-
-    <!-- Firebase SDK laden -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, push, onValue, remove, update, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-        // ==========================================
-        // DEINE FIREBASE KONFIGURATION
-        // ==========================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyB5v8vEyaoscAxcP2spKx6WoHGwc29gElA",
-            authDomain: "luis-apb.firebaseapp.com",
-            databaseURL: "https://luis-apb-default-rtdb.firebaseio.com",
-            projectId: "luis-apb",
-            storageBucket: "luis-apb.firebasestorage.app",
-            messagingSenderId: "58041196627",
-            appId: "1:58041196627:web:1c92e32d445853f5f9a6a6"
+        // Spielzustände
+        let bird = {
+            x: 150,
+            y: 250,
+            width: 45,
+            height: 35,
+            velocity: 0,
+            gravity: 0.45,
+            jump: -7.5,
+            rotation: 0
         };
-        // ==========================================
 
-        // Firebase initialisieren
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const notesRef = ref(db, 'apb_notes');
-        const infoRef = ref(db, 'apb_info'); 
+        let pipes = [];
+        let score = 0;
+        let gameState = 'ready'; // 'ready', 'playing', 'gameover'
+        let frame = 0;
 
-        const notesContainer = document.getElementById('notesContainer');
-        
-        // Admin Status und Passwort
-        const ADMIN_CODE = "DLQ33"; 
-        let isAdmin = localStorage.getItem('isAPBAdmin') === 'true';
+        // Einstellungen für die Röhren
+        const pipeConfig = {
+            width: 70,
+            gap: 160,
+            speed: 3.5,
+            interval: 110 // Alle 110 Frames eine neue Röhre
+        };
 
-        // ==========================================
-        // ADMIN LOGIN / LOGOUT LOGIK
-        // ==========================================
-        window.handleAdminAuth = function() {
-            if (isAdmin) {
-                const code = prompt("Du bist Admin. Gib den Code ein, um dich auszuloggen:");
-                if (code === ADMIN_CODE) {
-                    isAdmin = false;
-                    localStorage.removeItem('isAPBAdmin');
-                    alert("Admin-Modus deaktiviert.");
-                    location.reload(); 
-                } else if (code !== null) {
-                    alert("Falscher Code! Du bleibst Admin.");
-                }
-            } else {
-                const code = prompt("Admin-Code eingeben:");
-                if (code === ADMIN_CODE) {
-                    isAdmin = true;
-                    localStorage.setItem('isAPBAdmin', 'true');
-                    alert("Admin-Modus aktiviert!");
-                    location.reload(); 
-                } else if (code !== null) {
-                    alert("Falscher Code!");
-                }
-            }
-        }
+        // Farben exakt nach Design-Vorlage
+        const colors = {
+            background: '#1a2233', // Dunkelblau
+            bird: '#fcc02a',       // Gelb
+            pipe: '#5ecf7a',       // Grün
+            text: '#ffffff'        // Weiß
+        };
 
-        // ==========================================
-        // LOGIK FÜR GENERELLE INFORMATIONEN
-        // ==========================================
-        
-        window.openInfoModal = function() {
-            document.getElementById('infoModal').style.display = 'block';
-        }
-
-        window.closeInfoModal = function() {
-            document.getElementById('infoModal').style.display = 'none';
-        }
-
-        onValue(infoRef, (snapshot) => {
-            const infoTextArea = document.getElementById('infoText');
-            const saveBtn = document.getElementById('saveInfoBtn');
-            const data = snapshot.val();
-
-            infoTextArea.value = data || "";
-
-            if (isAdmin) {
-                infoTextArea.removeAttribute('readonly');
-                infoTextArea.placeholder = "Hier kannst du Informationen für alle eintragen...";
-                saveBtn.style.display = 'block';
-            } else {
-                infoTextArea.setAttribute('readonly', 'true');
-                infoTextArea.placeholder = "Noch keine Informationen vorhanden...";
-                saveBtn.style.display = 'none';
+        // Steuerung (Tastatur & Maus/Touch)
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                handleInput();
             }
         });
 
-        window.saveInfo = function() {
-            if (!isAdmin) return;
-            const text = document.getElementById('infoText').value;
-            set(infoRef, text)
-                .then(() => {
-                    alert("Informationen erfolgreich gespeichert!");
-                    closeInfoModal();
-                })
-                .catch((error) => {
-                    alert("Fehler beim Speichern: " + error.message);
-                });
+        canvas.addEventListener('mousedown', handleInput);
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleInput();
+        });
+
+        function handleInput() {
+            if (gameState === 'ready') {
+                gameState = 'playing';
+                bird.velocity = bird.jump;
+            } else if (gameState === 'playing') {
+                bird.velocity = bird.jump;
+            } else if (gameState === 'gameover') {
+                resetGame();
+            }
         }
 
-        // ==========================================
-        // NOTIZEN ANZEIGEN
-        // ==========================================
-        onValue(notesRef, (snapshot) => {
-            notesContainer.innerHTML = ''; 
-            const data = snapshot.val();
-            
-            if (data) {
-                const notesArray = Object.entries(data).sort((a, b) => b[1].timestamp - a[1].timestamp);
+        function resetGame() {
+            bird.y = 250;
+            bird.velocity = 0;
+            bird.rotation = 0;
+            pipes = [];
+            score = 0;
+            gameState = 'ready';
+            frame = 0;
+        }
 
-                notesArray.forEach(([id, note]) => {
-                    const card = document.createElement('div');
-                    card.className = 'note-card';
-                    
-                    const noteTitle = note.isAdminNote ? 'Admin note' : 'Note';
-                    
-                    let adminButtons = '';
-                    if (isAdmin) {
-                        adminButtons = `
-                            <div class="admin-controls">
-                                <button class="btn-small btn-edit" onclick="editNote('${id}')">Bearbeiten</button>
-                                <button class="btn-small btn-delete" onclick="deleteNote('${id}')">Entfernen</button>
-                            </div>
-                        `;
+        // Röhren generieren
+        function spawnPipe() {
+            const minHeight = 50;
+            const maxHeight = canvas.height - pipeConfig.gap - minHeight;
+            const topHeight = Math.floor(Math.random() * (maxHeight - minHeight + 1)) + minHeight;
+
+            pipes.push({
+                x: canvas.width,
+                topHeight: topHeight,
+                bottomY: topHeight + pipeConfig.gap,
+                passed: false
+            });
+        }
+
+        // Kollisionserkennung (AABB)
+        function checkCollision(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+        }
+
+        function update() {
+            if (gameState === 'playing') {
+                // Physik für den Vogel
+                bird.velocity += bird.gravity;
+                bird.y += bird.velocity;
+
+                // Rotation: Neigt sich nach oben beim Springen, nach unten beim Fallen
+                bird.rotation = Math.min(Math.max(bird.velocity * 0.06, -0.5), 1.4);
+
+                // Röhren spawnen
+                if (frame % pipeConfig.interval === 0) {
+                    spawnPipe();
+                }
+
+                for (let i = pipes.length - 1; i >= 0; i--) {
+                    let pipe = pipes[i];
+                    pipe.x -= pipeConfig.speed;
+
+                    // Kollisionsabfrage
+                    const birdRect = { x: bird.x, y: bird.y, width: bird.width, height: bird.height };
+                    const topPipeRect = { x: pipe.x, y: 0, width: pipeConfig.width, height: pipe.topHeight };
+                    const bottomPipeRect = { x: pipe.x, y: pipe.bottomY, width: pipeConfig.width, height: canvas.height - pipe.bottomY };
+
+                    if (checkCollision(birdRect, topPipeRect) || checkCollision(birdRect, bottomPipeRect)) {
+                        gameState = 'gameover';
                     }
 
-                    card.innerHTML = `
-                        <div class="apb-title">APB</div>
-                        <div class="note-text">${noteTitle}: ${note.text}</div>
-                        <div class="note-meta">By: ${note.author} ${note.dateString}</div>
-                        ${adminButtons}
-                    `;
-                    notesContainer.appendChild(card);
-                });
+                    // Punkte zählen
+                    if (!pipe.passed && pipe.x + pipeConfig.width < bird.x) {
+                        pipe.passed = true;
+                        score++;
+                    }
+
+                    // Alte Röhren entfernen
+                    if (pipe.x + pipeConfig.width < 0) {
+                        pipes.splice(i, 1);
+                    }
+                }
+
+                // Kollision mit Boden und Decke
+                if (bird.y + bird.height > canvas.height) {
+                    bird.y = canvas.height - bird.height;
+                    gameState = 'gameover';
+                }
+                if (bird.y < 0) {
+                    bird.y = 0;
+                    bird.velocity = 0;
+                }
+
+                frame++;
             }
-        });
+        }
 
-        // ==========================================
-        // NEUE NOTIZ HINZUFÜGEN
-        // ==========================================
-        window.addNote = function() {
-            const input = document.getElementById('noteInput');
-            const text = input.value.trim();
+        // Alles zeichnen (Rendering)
+        function draw() {
+            // Hintergrund
+            ctx.fillStyle = colors.background;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            if (text === "") return; 
+            // Röhren zeichnen (mit abgerundeten Ecken)
+            ctx.fillStyle = colors.pipe;
+            pipes.forEach(pipe => {
+                // Obere Röhre
+                ctx.beginPath();
+                ctx.roundRect(pipe.x, 0, pipeConfig.width, pipe.topHeight, 12);
+                ctx.fill();
 
-            const now = new Date();
-            const day = String(now.getDate()).padStart(2, '0');
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const year = now.getFullYear();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const dateString = `${day}/${month}/${year} ${hours}:${minutes}`;
-
-            const authorName = isAdmin ? 'Admin' : 'Anonym';
-            const isAdminNote = isAdmin ? true : false;
-
-            push(notesRef, {
-                text: text,
-                author: authorName,
-                isAdminNote: isAdminNote,
-                dateString: dateString,
-                timestamp: Date.now()
+                // Untere Röhre
+                ctx.beginPath();
+                ctx.roundRect(pipe.x, pipe.bottomY, pipeConfig.width, canvas.height - pipe.bottomY, 12);
+                ctx.fill();
             });
 
-            input.value = '';
+            // Vogel zeichnen (mit abgerundeten Ecken und Rotation)
+            ctx.save();
+            ctx.translate(bird.x + bird.width / 2, bird.y + bird.height / 2);
+            ctx.rotate(bird.rotation);
+            ctx.fillStyle = colors.bird;
+            ctx.beginPath();
+            ctx.roundRect(-bird.width / 2, -bird.height / 2, bird.width, bird.height, 8);
+            ctx.fill();
+            ctx.restore();
+
+            // Punktestand zeichnen (Weiß, oben in der Mitte)
+            ctx.fillStyle = colors.text;
+            ctx.font = 'bold 60px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText(score, canvas.width / 2, 40);
+
+            // Game Over Bildschirm
+            if (gameState === 'gameover') {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = colors.text;
+                ctx.font = 'bold 45px Arial';
+                ctx.fillText('Game Over', canvas.width / 2, canvas.height / 2 - 50);
+                
+                ctx.font = '22px Arial';
+                ctx.fillText('Klicken oder Leertaste zum Neustart', canvas.width / 2, canvas.height / 2 + 20);
+            }
+            
+            // Startbildschirm
+            if (gameState === 'ready') {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = colors.text;
+                ctx.font = 'bold 28px Arial';
+                ctx.fillText('Klicken oder Leertaste zum Starten', canvas.width / 2, canvas.height / 2);
+            }
         }
 
-        // ==========================================
-        // ADMIN FUNKTIONEN (LÖSCHEN & BEARBEITEN)
-        // ==========================================
-        window.deleteNote = function(id) {
-            if (!isAdmin) return;
-            if (confirm("Willst du diese Notiz wirklich löschen?")) {
-                remove(ref(db, 'apb_notes/' + id));
-            }
+        // Die Hauptschleife des Spiels
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
         }
 
-        window.editNote = function(id) {
-            if (!isAdmin) return;
-            const newText = prompt("Bitte gib den neuen Text für diese Notiz ein:");
-            if (newText !== null && newText.trim() !== "") {
-                update(ref(db, 'apb_notes/' + id), {
-                    text: newText.trim()
-                });
-            }
-        }
-        
-        // Modal schließen, wenn man außerhalb davon klickt
-        window.onclick = function(event) {
-            const modal = document.getElementById('infoModal');
-            if (event.target == modal) {
-                closeInfoModal();
-            }
-        }
+        // Spiel starten
+        gameLoop();
     </script>
 </body>
 </html>
