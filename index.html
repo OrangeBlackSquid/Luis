@@ -86,7 +86,7 @@
             padding: 15px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             text-align: left;
-            position: relative; /* Für die Admin Buttons */
+            position: relative;
         }
 
         .note-card .apb-title {
@@ -134,28 +134,87 @@
         }
         .btn-edit:hover { background-color: #2980b9; }
 
-        /* Der unsichtbare Admin-Button oben rechts */
+        /* Der SICHTBARE Login-Button oben rechts */
         #adminTrigger {
             position: fixed;
-            top: 0;
-            right: 0;
-            width: 60px;
-            height: 60px;
-            cursor: pointer;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            font-size: 14px;
             z-index: 9999;
-            /* Absichtlich unsichtbar */
-            background: transparent;
-            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        /* NEU: Modal (Fenster) für Generelle Informationen */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 10000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(0,0,0,0.8); /* Dunkler Hintergrund */
+            backdrop-filter: blur(3px);
+        }
+
+        .modal-content {
+            background-color: #2c2f33;
+            margin: 15% auto; 
+            padding: 20px;
+            border: 1px solid #444;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover { color: white; }
+
+        #infoText {
+            width: 100%;
+            height: 150px;
+            background-color: #1e2124;
+            color: white;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 10px;
+            box-sizing: border-box;
+            font-family: inherit;
+            resize: vertical;
+            margin-top: 15px;
+            font-size: 15px;
+        }
+
+        #infoText:focus { outline: none; border-color: #f0b132; }
+        #infoText:read-only { opacity: 0.7; cursor: not-allowed; border-color: #333; }
+        
+        #saveInfoBtn {
+            margin-top: 15px;
+            width: 100%;
         }
     </style>
 </head>
 <body>
 
-    <!-- Unsichtbarer Klickbereich für Admin-Login -->
-    <div id="adminTrigger" onclick="handleAdminAuth()" title=""></div>
+    <!-- Sichtbarer Login-Button oben rechts -->
+    <button id="adminTrigger" onclick="handleAdminAuth()">Login</button>
 
     <h1>Luis</h1>
     <h2>APB System</h2>
+
+    <!-- NEU: Button für Generelle Informationen -->
+    <button onclick="openInfoModal()" style="margin-bottom: 25px; background-color: #3498db; color: white;">Generelle Informationen</button>
 
     <div class="input-container">
         <input type="text" id="noteInput" placeholder="Notiz eingeben (z.B. Test)...">
@@ -166,11 +225,21 @@
         <!-- Hier werden die Notizen automatisch eingefügt -->
     </div>
 
+    <!-- NEU: Das Modal (Fenster) für die Informationen -->
+    <div id="infoModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeInfoModal()">&times;</span>
+            <h3 style="margin-top: 0; color: #f0b132;">Informationen</h3>
+            <textarea id="infoText" readonly placeholder="Noch keine Informationen vorhanden..."></textarea>
+            <button id="saveInfoBtn" onclick="saveInfo()" style="display: none;">Speichern</button>
+        </div>
+    </div>
+
     <!-- Firebase SDK laden -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        // WICHTIG: remove und update wurden hier hinzugefügt für die Admin-Funktionen
-        import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        // 'set' wurde hinzugefügt, um die Infos zu speichern
+        import { getDatabase, ref, push, onValue, remove, update, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         // ==========================================
         // DEINE FIREBASE KONFIGURATION
@@ -190,11 +259,12 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const notesRef = ref(db, 'apb_notes');
+        const infoRef = ref(db, 'apb_info'); // NEU: Referenz für die allgemeinen Infos
 
         const notesContainer = document.getElementById('notesContainer');
         
         // Admin Status und Passwort
-        const ADMIN_CODE = "DLQ33"; // Hier kannst du den Code ändern
+        const ADMIN_CODE = "Platzhalter123"; 
         let isAdmin = localStorage.getItem('isAPBAdmin') === 'true';
 
         // ==========================================
@@ -202,24 +272,22 @@
         // ==========================================
         window.handleAdminAuth = function() {
             if (isAdmin) {
-                // Wenn bereits Admin, Code abfragen zum Ausloggen
                 const code = prompt("Du bist Admin. Gib den Code ein, um dich auszuloggen:");
                 if (code === ADMIN_CODE) {
                     isAdmin = false;
                     localStorage.removeItem('isAPBAdmin');
                     alert("Admin-Modus deaktiviert.");
-                    location.reload(); // Seite neu laden, um Admin-Buttons zu entfernen
+                    location.reload(); 
                 } else if (code !== null) {
                     alert("Falscher Code! Du bleibst Admin.");
                 }
             } else {
-                // Wenn nicht Admin, Code abfragen zum Einloggen
                 const code = prompt("Admin-Code eingeben:");
                 if (code === ADMIN_CODE) {
                     isAdmin = true;
                     localStorage.setItem('isAPBAdmin', 'true');
                     alert("Admin-Modus aktiviert!");
-                    location.reload(); // Seite neu laden, um Admin-Buttons anzuzeigen
+                    location.reload(); 
                 } else if (code !== null) {
                     alert("Falscher Code!");
                 }
@@ -227,25 +295,70 @@
         }
 
         // ==========================================
+        // NEU: LOGIK FÜR GENERelle INFORMATIONEN
+        // ==========================================
+        
+        // Modal öffnen
+        window.openInfoModal = function() {
+            document.getElementById('infoModal').style.display = 'block';
+        }
+
+        // Modal schließen
+        window.closeInfoModal = function() {
+            document.getElementById('infoModal').style.display = 'none';
+        }
+
+        // Infos aus der Datenbank laden und anzeigen
+        onValue(infoRef, (snapshot) => {
+            const infoTextArea = document.getElementById('infoText');
+            const saveBtn = document.getElementById('saveInfoBtn');
+            const data = snapshot.val();
+
+            // Text setzen (falls leer, Standardtext anzeigen)
+            infoTextArea.value = data || "";
+
+            // Admin-Rechte prüfen und Textbox entsprechend anpassen
+            if (isAdmin) {
+                infoTextArea.removeAttribute('readonly');
+                infoTextArea.placeholder = "Hier kannst du Informationen für alle eintragen...";
+                saveBtn.style.display = 'block';
+            } else {
+                infoTextArea.setAttribute('readonly', 'true');
+                infoTextArea.placeholder = "Noch keine Informationen vorhanden...";
+                saveBtn.style.display = 'none';
+            }
+        });
+
+        // Infos speichern (nur für Admins)
+        window.saveInfo = function() {
+            if (!isAdmin) return;
+            const text = document.getElementById('infoText').value;
+            set(infoRef, text)
+                .then(() => {
+                    alert("Informationen erfolgreich gespeichert!");
+                    closeInfoModal();
+                })
+                .catch((error) => {
+                    alert("Fehler beim Speichern: " + error.message);
+                });
+        }
+
+        // ==========================================
         // NOTIZEN ANZEIGEN
         // ==========================================
         onValue(notesRef, (snapshot) => {
-            notesContainer.innerHTML = ''; // Container leeren
+            notesContainer.innerHTML = ''; 
             const data = snapshot.val();
             
             if (data) {
-                // Daten in ein Array umwandeln und nach Zeit sortieren (neueste zuerst)
-                // Object.entries gibt uns die einzigartige ID (key) und das Objekt (note)
                 const notesArray = Object.entries(data).sort((a, b) => b[1].timestamp - a[1].timestamp);
 
                 notesArray.forEach(([id, note]) => {
                     const card = document.createElement('div');
                     card.className = 'note-card';
                     
-                    // Prüfen ob es eine Admin Note ist
                     const noteTitle = note.isAdminNote ? 'Admin note' : 'Note';
                     
-                    // Admin Buttons generieren (nur wenn isAdmin true ist)
                     let adminButtons = '';
                     if (isAdmin) {
                         adminButtons = `
@@ -274,9 +387,8 @@
             const input = document.getElementById('noteInput');
             const text = input.value.trim();
 
-            if (text === "") return; // Leere Eingaben ignorieren
+            if (text === "") return; 
 
-            // Datum und Uhrzeit im Format TT/MM/JJJJ HH:MM generieren
             const now = new Date();
             const day = String(now.getDate()).padStart(2, '0');
             const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -285,11 +397,9 @@
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const dateString = `${day}/${month}/${year} ${hours}:${minutes}`;
 
-            // Prüfen, ob man Admin ist
             const authorName = isAdmin ? 'Admin' : 'Anonym';
             const isAdminNote = isAdmin ? true : false;
 
-            // Daten an Firebase senden
             push(notesRef, {
                 text: text,
                 author: authorName,
@@ -298,7 +408,6 @@
                 timestamp: Date.now()
             });
 
-            // Eingabefeld leeren
             input.value = '';
         }
 
@@ -319,6 +428,14 @@
                 update(ref(db, 'apb_notes/' + id), {
                     text: newText.trim()
                 });
+            }
+        }
+        
+        // Modal schließen, wenn man außerhalb davon klickt
+        window.onclick = function(event) {
+            const modal = document.getElementById('infoModal');
+            if (event.target == modal) {
+                closeInfoModal();
             }
         }
     </script>
