@@ -3,325 +3,547 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Typing Challenge</title>
+<title>typing.challenge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Lexend+Deca:wght@400;700&display=swap" rel="stylesheet">
 <style>
+  :root {
+    --bg: #323437;
+    --bg-sub: #2c2e31;
+    --bg-sub-alt: #262829;
+    --sub: #646669;
+    --sub-alt: #4a4d51;
+    --text: #d1d0c5;
+    --main: #e2b714;
+    --error: #ca4754;
+    --error-extra: #7e2a33;
+    --caret: #e2b714;
+  }
+
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
   html, body {
     width:100%; height:100%; overflow:hidden;
-    background:#0a0e1a; color:#fff;
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'JetBrains Mono', 'Courier New', monospace;
+    -webkit-font-smoothing:antialiased;
     touch-action:manipulation;
+    user-select:none;
+    -webkit-user-select:none;
+    overscroll-behavior:none;
   }
 
   #app {
-    position:relative; width:100vw; height:100vh; overflow:hidden;
-    background:radial-gradient(ellipse at center,#141e33 0%,#0a0e1a 100%);
-  }
-
-  .screen {
-    position:absolute; inset:0;
+    position:relative; width:100vw; height:100vh;
     display:flex; flex-direction:column;
-    padding:24px;
-    transition:opacity .25s;
-  }
-  .screen.hidden { display:none; }
-
-  /* ============ MENU ============ */
-  #menu {
-    justify-content:center; align-items:center; gap:20px;
-    text-align:center;
-  }
-  #menu h1 {
-    font-size:42px; font-weight:900; letter-spacing:6px;
-    background:linear-gradient(135deg,#5ecf7a,#00e5ff);
-    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-    background-clip:text;
-    margin-bottom:4px;
-  }
-  #menu .subtitle {
-    color:#6b7a94; font-size:13px; letter-spacing:3px;
-    text-transform:uppercase; margin-bottom:24px;
-  }
-  .difficulty-grid {
-    display:flex; flex-direction:column; gap:12px;
-    width:100%; max-width:380px;
-  }
-  .diff-btn {
-    background:rgba(255,255,255,.05);
-    border:1px solid rgba(255,255,255,.12);
-    border-radius:14px;
-    padding:16px 20px;
-    color:#fff; cursor:pointer;
-    text-align:left;
-    transition:all .18s;
-    display:flex; justify-content:space-between; align-items:center;
-    font-family:inherit;
-  }
-  .diff-btn:hover, .diff-btn:active {
-    background:rgba(94,207,122,.12);
-    border-color:#5ecf7a;
-    transform:translateY(-2px);
-  }
-  .diff-name { font-size:17px; font-weight:800; letter-spacing:2px; }
-  .diff-desc { font-size:11px; color:#6b7a94; margin-top:3px; }
-  .diff-badge {
-    font-size:20px; opacity:.85;
+    overflow:hidden;
   }
 
-  /* ============ PLAY ============ */
-  #play { padding:0; }
-
-  #play header {
-    display:flex; justify-content:space-between; align-items:center;
-    padding:16px 20px 8px;
+  /* ============ TOP BAR ============ */
+  .topbar {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 24px;
     gap:12px;
+    flex-shrink:0;
   }
-  #quitBtn {
-    background:rgba(255,255,255,.08);
-    border:none; color:#fff;
-    width:36px; height:36px; border-radius:50%;
-    font-size:20px; cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
-    font-family:inherit;
+
+  .logo {
+    display:flex; align-items:baseline; gap:2px;
+    font-family:'Lexend Deca', 'JetBrains Mono', sans-serif;
+    cursor:default;
   }
-  #quitBtn:hover { background:rgba(255,255,255,.15); }
+  .logo .logo-icon {
+    font-size:20px; color:var(--main);
+    margin-right:6px; line-height:1;
+  }
+  .logo .logo-main {
+    font-size:20px; font-weight:700;
+    color:var(--text); line-height:1;
+  }
+  .logo .logo-dot {
+    font-size:20px; font-weight:700;
+    color:var(--main); line-height:1;
+  }
+  .logo .logo-tail {
+    font-size:14px; color:var(--sub);
+    margin-left:4px; line-height:1;
+  }
+
   .stats {
-    display:flex; gap:22px; align-items:center;
+    display:flex; align-items:center; gap:20px;
+    font-family:'Lexend Deca', sans-serif;
   }
   .stat {
-    text-align:center;
+    display:flex; flex-direction:column;
+    line-height:1.1; min-width:46px;
   }
   .stat .val {
-    font-size:18px; font-weight:800; color:#fff;
-    display:block;
+    font-size:20px; font-weight:400;
+    color:var(--main);
     font-variant-numeric:tabular-nums;
   }
-  .stat .label {
-    font-size:9px; color:#6b7a94; letter-spacing:1.5px;
-    text-transform:uppercase;
+  .stat .lbl {
+    font-size:9px; letter-spacing:1.5px;
+    text-transform:lowercase;
+    color:var(--sub); margin-top:2px;
   }
 
-  #play main {
-    flex:1; display:flex; flex-direction:column;
+  /* ============ MAIN ============ */
+  main {
+    flex:1;
+    display:flex; flex-direction:column;
     justify-content:center; align-items:center;
-    padding:20px;
+    padding:20px 24px;
+    position:relative;
+    overflow:hidden;
   }
 
+  /* ============ SINGLE WORD DISPLAY ============ */
   #wordDisplay {
-    font-size:clamp(28px,9vw,64px);
-    font-weight:800;
-    letter-spacing:2px;
-    line-height:1.15;
+    font-family:'JetBrains Mono', monospace;
+    font-size:clamp(28px, 9vw, 68px);
+    font-weight:500;
+    letter-spacing:1px;
+    line-height:1.25;
     text-align:center;
     word-break:break-word;
     max-width:100%;
     padding:20px 10px;
     transition:transform .15s;
-    font-variant-numeric:tabular-nums;
+    color:var(--sub);
   }
-  #wordDisplay.shake {
-    animation:shake .35s ease-in-out;
+
+  #wordDisplay .letter {
+    display:inline-block;
+    position:relative;
+    color:var(--sub);
+    transition:color .08s;
   }
+  #wordDisplay .letter.correct {
+    color:var(--text);
+  }
+  #wordDisplay .letter.wrong {
+    color:var(--error);
+    text-decoration:underline;
+    text-decoration-color:var(--error);
+    text-underline-offset:6px;
+    text-decoration-thickness:3px;
+  }
+  #wordDisplay .letter.extra {
+    color:var(--error-extra);
+    text-decoration:underline;
+    text-decoration-color:var(--error-extra);
+    text-underline-offset:6px;
+    text-decoration-thickness:3px;
+  }
+
+  /* Caret */
+  #wordDisplay .letter.caret::before {
+    content:'';
+    position:absolute;
+    left:-3px;
+    top:0.05em;
+    width:3px;
+    height:1.05em;
+    background:var(--caret);
+    border-radius:1.5px;
+    animation:caretBlink 1s steps(1) infinite;
+    pointer-events:none;
+  }
+  @keyframes caretBlink {
+    0%, 49% { opacity:1; }
+    50%, 100% { opacity:0.15; }
+  }
+
+  /* Complete flash */
   #wordDisplay.complete {
     animation:completePop .4s ease-out;
   }
-  @keyframes shake {
-    0%,100% { transform:translateX(0); }
-    20%,60% { transform:translateX(-10px); }
-    40%,80% { transform:translateX(10px); }
-  }
   @keyframes completePop {
-    0%   { transform:scale(1); color:#5ecf7a; }
-    40%  { transform:scale(1.12); color:#5ecf7a; text-shadow:0 0 40px rgba(94,207,122,.8); }
+    0%   { transform:scale(1); }
+    40%  { transform:scale(1.06); color:var(--main); }
     100% { transform:scale(1); }
   }
 
-  #wordDisplay .char {
-    color:#3d4a63;
-    transition:color .1s;
+  /* Shake */
+  #wordDisplay.shake {
+    animation:shake .3s ease-in-out;
   }
-  #wordDisplay .char.correct {
-    color:#5ecf7a;
-  }
-  #wordDisplay .char.wrong {
-    color:#ff4a5e;
-    text-decoration:underline;
-    text-decoration-color:rgba(255,74,94,.6);
-  }
-  #wordDisplay .char.current {
-    position:relative;
-  }
-  #wordDisplay .char.current::after {
-    content:'';
-    position:absolute;
-    left:0; right:0; bottom:-6px;
-    height:4px; background:#5ecf7a;
-    border-radius:2px;
-    animation:cursorPulse 1s ease-in-out infinite;
-  }
-  @keyframes cursorPulse {
-    0%,100% { opacity:1; }
-    50% { opacity:.3; }
+  @keyframes shake {
+    0%,100% { transform:translateX(0); }
+    20%,60% { transform:translateX(-8px); }
+    40%,80% { transform:translateX(8px); }
   }
 
-  #play footer {
-    padding:0 20px 24px;
+  /* ============ PROGRESS BAR ============ */
+  .progress-wrap {
+    width:100%; max-width:600px;
+    padding:0 10px;
+    margin-top:36px;
   }
   .progress-bar {
-    width:100%; height:4px;
-    background:rgba(255,255,255,.08);
+    width:100%; height:3px;
+    background:var(--bg-sub);
     border-radius:2px;
     overflow:hidden;
   }
   #progressFill {
     height:100%; width:0%;
-    background:linear-gradient(90deg,#5ecf7a,#00e5ff);
+    background:var(--main);
     border-radius:2px;
     transition:width .3s ease;
   }
+  .progress-label {
+    text-align:center;
+    margin-top:10px;
+    font-size:11px;
+    letter-spacing:2px;
+    color:var(--sub-alt);
+    font-family:'Lexend Deca', sans-serif;
+    text-transform:lowercase;
+  }
 
-  /* Hidden input for mobile keyboard */
+  /* ============ FOOTER ============ */
+  .footer {
+    padding:14px 20px 20px;
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    font-family:'Lexend Deca', sans-serif;
+    font-size:11px;
+    color:var(--sub-alt);
+    letter-spacing:.5px;
+    flex-shrink:0;
+    flex-wrap:wrap;
+  }
+  .footer .hint {
+    display:flex; align-items:center; gap:6px;
+  }
+  .footer kbd {
+    display:inline-flex; align-items:center; justify-content:center;
+    background:var(--bg-sub);
+    color:var(--sub);
+    padding:3px 8px; border-radius:4px;
+    font-family:inherit; font-size:10px;
+    letter-spacing:1px; min-width:22px;
+  }
+
+  /* ============ MENU OVERLAY ============ */
+  #menuOverlay {
+    position:absolute; inset:0;
+    background:var(--bg);
+    z-index:50;
+    display:flex; flex-direction:column;
+    justify-content:center; align-items:center;
+    gap:22px;
+    padding:24px;
+    transition:opacity .2s;
+  }
+  #menuOverlay.hidden { display:none; }
+
+  #menuOverlay .menu-logo {
+    font-family:'Lexend Deca', sans-serif;
+    font-size:38px;
+    font-weight:700;
+    color:var(--text);
+    letter-spacing:1px;
+    display:flex;
+    align-items:baseline;
+  }
+  #menuOverlay .menu-logo .accent { color:var(--main); }
+  #menuOverlay .menu-logo .dot { color:var(--main); }
+  #menuOverlay .menu-logo .tail {
+    font-size:18px;
+    color:var(--sub);
+    font-family:'JetBrains Mono', monospace;
+    margin-left:8px;
+  }
+
+  #menuOverlay .menu-subtitle {
+    font-family:'Lexend Deca', sans-serif;
+    color:var(--sub);
+    font-size:12px;
+    letter-spacing:2px;
+    text-transform:lowercase;
+    margin-top:-10px;
+  }
+
+  .menu-config {
+    display:flex; flex-direction:column;
+    gap:8px;
+    width:100%; max-width:340px;
+    margin-top:8px;
+  }
+
+  .cfg-row {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:var(--bg-sub);
+    border:1px solid transparent;
+    border-radius:8px;
+    padding:14px 18px;
+    cursor:pointer;
+    transition:all .15s;
+    color:var(--text);
+    font-family:inherit;
+    font-size:15px;
+    text-align:left;
+  }
+  .cfg-row:hover, .cfg-row:active {
+    background:var(--bg-sub-alt);
+    border-color:var(--main);
+  }
+  .cfg-row .cfg-name {
+    font-family:'Lexend Deca', sans-serif;
+    font-weight:700;
+    letter-spacing:1px;
+    text-transform:lowercase;
+  }
+  .cfg-row .cfg-stars {
+    color:var(--main);
+    font-size:14px;
+    letter-spacing:2px;
+  }
+  .cfg-row .cfg-desc {
+    display:block;
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    color:var(--sub);
+    font-weight:400;
+    letter-spacing:0;
+    margin-top:3px;
+    text-transform:none;
+  }
+
+  /* ============ RESULTS ============ */
+  #resultsOverlay {
+    position:absolute; inset:0;
+    background:var(--bg);
+    z-index:60;
+    display:flex; flex-direction:column;
+    justify-content:center; align-items:center;
+    gap:20px;
+    padding:30px 20px;
+  }
+  #resultsOverlay.hidden { display:none; }
+
+  .results-title {
+    font-family:'Lexend Deca', sans-serif;
+    font-size:24px;
+    font-weight:400;
+    color:var(--sub);
+    letter-spacing:2px;
+    text-transform:lowercase;
+    margin-bottom:8px;
+  }
+
+  .results-grid {
+    display:flex; flex-wrap:wrap;
+    justify-content:center;
+    gap:30px 44px;
+    margin:16px 0;
+    max-width:500px;
+  }
+  .results-item { text-align:center; }
+  .results-item .label {
+    font-family:'Lexend Deca', sans-serif;
+    color:var(--sub);
+    font-size:12px;
+    letter-spacing:1.5px;
+    text-transform:lowercase;
+    margin-bottom:6px;
+  }
+  .results-item .value {
+    font-family:'JetBrains Mono', monospace;
+    color:var(--main);
+    font-size:48px;
+    font-weight:400;
+    line-height:1;
+  }
+  .results-item .value.small {
+    font-size:28px;
+  }
+  .results-item .unit {
+    color:var(--sub);
+    font-size:12px;
+    margin-left:3px;
+  }
+
+  .results-buttons {
+    display:flex; gap:12px;
+    margin-top:16px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .results-btn {
+    background:transparent;
+    border:1px solid var(--sub-alt);
+    color:var(--sub);
+    padding:11px 24px;
+    border-radius:6px;
+    font-family:inherit;
+    font-size:13px;
+    letter-spacing:1px;
+    cursor:pointer;
+    transition:all .15s;
+  }
+  .results-btn:hover, .results-btn:active {
+    border-color:var(--main);
+    color:var(--main);
+  }
+  .results-btn.primary {
+    background:var(--main);
+    color:var(--bg);
+    border-color:var(--main);
+  }
+  .results-btn.primary:hover { background:#f0c930; }
+
+  /* ============ HIDDEN INPUT ============ */
   #hiddenInput {
     position:fixed;
     top:50%; left:50%;
     width:1px; height:1px;
     opacity:0.01;
-    border:none; outline:none;
-    background:transparent;
-    color:transparent;
-    caret-color:transparent;
+    border:none; outline:none; background:transparent;
+    color:transparent; caret-color:transparent;
     font-size:16px;
     pointer-events:none;
     z-index:-1;
   }
 
-  /* ============ RESULTS ============ */
-  #results {
-    justify-content:center; align-items:center; gap:16px;
-    text-align:center;
-    background:radial-gradient(ellipse at center,rgba(94,207,122,.08) 0%,#0a0e1a 100%);
+  /* ============ MOBILE ============ */
+  @media (max-width: 700px) {
+    .topbar { padding:12px 16px; }
+    .logo .logo-icon { font-size:18px; }
+    .logo .logo-main, .logo .logo-dot { font-size:18px; }
+    .logo .logo-tail { font-size:12px; }
+    .stat .val { font-size:17px; }
+    .stat .lbl { font-size:8px; letter-spacing:1px; }
+    .stats { gap:14px; }
+    main { padding:14px 16px; }
+    #wordDisplay { padding:14px 6px; }
+    .progress-wrap { margin-top:24px; padding:0; }
+    .footer { padding:10px 14px 14px; gap:14px; font-size:10px; }
+    #menuOverlay { gap:18px; padding:20px; }
+    #menuOverlay .menu-logo { font-size:30px; }
+    #menuOverlay .menu-logo .tail { font-size:14px; }
+    .cfg-row { padding:12px 16px; font-size:14px; }
+    .cfg-row .cfg-stars { font-size:12px; letter-spacing:1.5px; }
+    .results-grid { gap:22px 32px; }
+    .results-item .value { font-size:38px; }
+    .results-item .value.small { font-size:22px; }
   }
-  #results h1 {
-    font-size:36px; font-weight:900; letter-spacing:5px;
-    color:#5ecf7a;
-    text-shadow:0 0 30px rgba(94,207,122,.5);
-    margin-bottom:8px;
+
+  @media (max-height: 500px) {
+    #wordDisplay { padding:8px 6px; }
+    .progress-wrap { margin-top:14px; }
+    .footer { padding:6px 14px 10px; }
   }
-  .result-stats {
-    display:grid; grid-template-columns:1fr 1fr; gap:14px;
-    width:100%; max-width:340px;
-    margin-bottom:16px;
-  }
-  .result-stats > div {
-    background:rgba(255,255,255,.04);
-    border:1px solid rgba(255,255,255,.08);
-    padding:16px 12px;
-    border-radius:12px;
-    text-align:center;
-  }
-  .result-stats label {
-    display:block; font-size:10px; color:#6b7a94;
-    letter-spacing:1.5px; text-transform:uppercase;
-    margin-bottom:6px;
-  }
-  .result-stats span {
-    font-size:22px; font-weight:800; color:#fff;
-  }
-  #menuBtn {
-    background:rgba(94,207,122,.15);
-    border:1px solid #5ecf7a;
-    color:#5ecf7a;
-    padding:14px 32px;
-    border-radius:10px;
-    font-size:14px; font-weight:800;
-    letter-spacing:2px;
-    text-transform:uppercase;
-    cursor:pointer;
-    font-family:inherit;
-    margin-top:12px;
-  }
-  #menuBtn:hover { background:rgba(94,207,122,.25); }
 </style>
 </head>
 <body>
 <div id="app">
 
-  <!-- MENU -->
-  <div id="menu" class="screen">
-    <h1>TYPING</h1>
-    <div class="subtitle">Challenge</div>
-    <div class="difficulty-grid">
-      <button class="diff-btn" data-diff="einfach">
-        <div>
-          <div class="diff-name">EINFACH</div>
-          <div class="diff-desc">Kurze, häufige Wörter</div>
-        </div>
-        <div class="diff-badge">⭐</div>
-      </button>
-      <button class="diff-btn" data-diff="mittel">
-        <div>
-          <div class="diff-name">MITTEL</div>
-          <div class="diff-desc">Längere Alltagswörter</div>
-        </div>
-        <div class="diff-badge">⭐⭐</div>
-      </button>
-      <button class="diff-btn" data-diff="schwer">
-        <div>
-          <div class="diff-name">SCHWER</div>
-          <div class="diff-desc">Komplexe Begriffe</div>
-        </div>
-        <div class="diff-badge">⭐⭐⭐</div>
-      </button>
-      <button class="diff-btn" data-diff="unmöglich">
-        <div>
-          <div class="diff-name">UNMÖGLICH</div>
-          <div class="diff-desc">Bürokratie-Monster</div>
-        </div>
-        <div class="diff-badge">💀</div>
-      </button>
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="logo">
+      <span class="logo-icon">⌨</span>
+      <span class="logo-main">typing</span>
+      <span class="logo-dot">.</span>
+      <span class="logo-tail">challenge</span>
     </div>
-  </div>
+    <div class="stats">
+      <div class="stat"><span class="val" id="statWpm">0</span><span class="lbl">wpm</span></div>
+      <div class="stat"><span class="val" id="statAcc">100%</span><span class="lbl">acc</span></div>
+      <div class="stat"><span class="val" id="statTime">0:00</span><span class="lbl">time</span></div>
+    </div>
+  </header>
 
-  <!-- PLAY -->
-  <div id="play" class="screen hidden">
-    <header>
-      <button id="quitBtn">×</button>
-      <div class="stats">
-        <div class="stat">
-          <span class="val" id="wordProgress">1/25</span>
-          <span class="label">Wort</span>
-        </div>
-        <div class="stat">
-          <span class="val" id="accuracyVal">100%</span>
-          <span class="label">Genau</span>
-        </div>
-        <div class="stat">
-          <span class="val" id="streakVal">0</span>
-          <span class="label">Streak</span>
-        </div>
-      </div>
-    </header>
-    <main>
-      <div id="wordDisplay"></div>
-    </main>
-    <footer>
+  <!-- MAIN -->
+  <main>
+    <div id="wordDisplay"></div>
+    <div class="progress-wrap">
       <div class="progress-bar"><div id="progressFill"></div></div>
-    </footer>
-    <input type="text" id="hiddenInput" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="text">
-  </div>
-
-  <!-- RESULTS -->
-  <div id="results" class="screen hidden">
-    <h1>GESCHAFFT!</h1>
-    <div class="result-stats">
-      <div><label>Wörter</label><span id="resultWords">0</span></div>
-      <div><label>Genauigkeit</label><span id="resultAccuracy">0%</span></div>
-      <div><label>Beste Serie</label><span id="resultStreak">0</span></div>
-      <div><label>Zeit</label><span id="resultTime">0s</span></div>
+      <div class="progress-label"><span id="progressLabel">1 / 25</span></div>
     </div>
-    <button id="menuBtn">Zurück zum Menü</button>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="hint"><kbd>esc</kbd>quit</div>
+    <div class="hint"><kbd>tab</kbd>restart</div>
+  </footer>
+
+  <!-- MENU OVERLAY -->
+  <div id="menuOverlay">
+    <div class="menu-logo">
+      <span>typing</span><span class="dot">.</span><span class="accent">challenge</span>
+      <span class="tail">/deutsch</span>
+    </div>
+    <div class="menu-subtitle">wähle eine schwierigkeit</div>
+    <div class="menu-config">
+      <button class="cfg-row" data-diff="einfach">
+        <span>
+          <span class="cfg-name">einfach</span>
+          <span class="cfg-desc">kurze, häufige wörter</span>
+        </span>
+        <span class="cfg-stars">★</span>
+      </button>
+      <button class="cfg-row" data-diff="mittel">
+        <span>
+          <span class="cfg-name">mittel</span>
+          <span class="cfg-desc">längere alltagswörter</span>
+        </span>
+        <span class="cfg-stars">★★</span>
+      </button>
+      <button class="cfg-row" data-diff="schwer">
+        <span>
+          <span class="cfg-name">schwer</span>
+          <span class="cfg-desc">komplexe begriffe</span>
+        </span>
+        <span class="cfg-stars">★★★</span>
+      </button>
+      <button class="cfg-row" data-diff="unmöglich">
+        <span>
+          <span class="cfg-name">unmöglich</span>
+          <span class="cfg-desc">bürokratie-monster</span>
+        </span>
+        <span class="cfg-stars">★★★★</span>
+      </button>
+    </div>
   </div>
 
+  <!-- RESULTS OVERLAY -->
+  <div id="resultsOverlay" class="hidden">
+    <div class="results-title">session complete</div>
+    <div class="results-grid">
+      <div class="results-item">
+        <div class="label">wpm</div>
+        <div class="value" id="resWpm">0</div>
+      </div>
+      <div class="results-item">
+        <div class="label">accuracy</div>
+        <div class="value" id="resAcc">100%</div>
+      </div>
+      <div class="results-item">
+        <div class="label">chars</div>
+        <div class="value small" id="resChars">0</div>
+      </div>
+      <div class="results-item">
+        <div class="label">time</div>
+        <div class="value small" id="resTime">0s</div>
+      </div>
+    </div>
+    <div class="results-buttons">
+      <button class="results-btn" id="resRestart">restart</button>
+      <button class="results-btn primary" id="resMenu">menu</button>
+    </div>
+  </div>
+
+  <input type="text" id="hiddenInput" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="text">
 </div>
 
 <script>
@@ -329,61 +551,20 @@
 'use strict';
 
 // ============================================================
-//  WORT-LISTEN (je ~200+ Wörter)
+//  WORT-LISTEN
 // ============================================================
 const WORDS = {
-  einfach: `Haus Baum Hund Katze Ball Buch Tisch Stuhl Tür Wand Bett Auto Zug Bus Schiff Sonne Mond Stern Himmel Wolke Regen Schnee Wind Wasser Feuer Erde Sand Stein Berg Tal Fluss Meer See Wald Wiese Feld Garten Blume Rose Tulpe Gras Blatt Ast Wurzel Apfel Birne Banane Kirsche Traube Beere Brot Käse Milch Butter Ei Fleisch Fisch Reis Nudel Suppe Salat Kuchen Torte Keks Zucker Salz Pfeffer Honig Kaffee Tee Saft Bier Wein Glas Tasse Teller Löffel Gabel Messer Topf Pfanne Herd Schrank Regal Sofa Sessel Teppich Lampe Kerze Bild Uhr Spiegel Kamm Bürste Seife Handtuch Kleidung Hemd Hose Rock Kleid Jacke Mantel Schuh Stiefel Socke Mütze Hut Schal Handschuh Gürtel Tasche Koffer Schlüssel Geld Münze Schein Karte Brief Paket Zeitung Heft Stift Bleistift Kuli Lineal Schere Kleber Papier Ordner Mappe Computer Laptop Handy Telefon Radio Kamera Foto Film Musik Lied Tanz Spiel Sport Fußball Tennis Schwimmen Laufen Springen Klettern Radfahren Reiten Wandern Kochen Backen Malen Lesen Schreiben Rechnen Lernen Spielen Schlafen Essen Trinken Gehen Kommen Sehen Hören Sprechen Denken Fühlen Lachen Weinen Singen Tanzen Kind Baby Mann Frau Junge Mädchen Vater Mutter Bruder Schwester Oma Opa Onkel Tante Freund Nachbar Lehrer Arzt Polizist Feuerwehr Bein Arm Hand Kopf Auge Ohr Nase Mund Zahn Zunge Hals Schulter Rücken Bauch Knie Fuß Zeh Haar Haut Blut Knochen Herz Lunge Leber Magen Darm Gehirn Nerv Muskel`.split(/\s+/).filter(Boolean),
+  einfach: `Haus Baum Hund Katze Ball Buch Tisch Stuhl Tür Wand Bett Auto Zug Bus Schiff Sonne Mond Stern Himmel Wolke Regen Schnee Wind Wasser Feuer Erde Sand Stein Berg Tal Fluss Meer See Wald Wiese Feld Garten Blume Rose Tulpe Gras Blatt Ast Wurzel Apfel Birne Banane Kirsche Traube Beere Brot Käse Milch Butter Ei Fleisch Fisch Reis Nudel Suppe Salat Kuchen Torte Keks Zucker Salz Pfeffer Honig Kaffee Tee Saft Bier Wein Glas Tasse Teller Löffel Gabel Messer Topf Pfanne Herd Schrank Regal Sofa Sessel Teppich Lampe Kerze Bild Uhr Spiegel Kamm Bürste Seife Handtuch Hemd Hose Rock Kleid Jacke Mantel Schuh Stiefel Socke Mütze Hut Schal Handschuh Gürtel Tasche Koffer Schlüssel Geld Münze Schein Karte Brief Paket Zeitung Heft Stift Bleistift Kuli Lineal Schere Kleber Papier Ordner Mappe Computer Laptop Handy Telefon Radio Kamera Foto Film Musik Lied Tanz Spiel Sport Fußball Tennis Schwimmen Laufen Springen Klettern Radfahren Reiten Wandern Kochen Backen Malen Lesen Schreiben Rechnen Lernen Spielen Schlafen Essen Trinken Gehen Kommen Sehen Hören Sprechen Denken Fühlen Lachen Weinen Singen Tanzen Kind Baby Mann Frau Junge Mädchen Vater Mutter Bruder Schwester Oma Opa Onkel Tante Freund Nachbar Lehrer Arzt Polizist Feuerwehr Bein Arm Hand Kopf Auge Ohr Nase Mund Zahn Zunge Hals Schulter Rücken Bauch Knie Fuß Zeh Haar Haut Blut Knochen Herz Lunge Leber Magen Darm Gehirn Nerv Muskel`.split(/\s+/).filter(Boolean),
 
   mittel: `Computer Fernseher Telefon Bibliothek Krankenhaus Flughafen Bahnhof Restaurant Supermarkt Apotheke Bäckerei Metzgerei Friseur Schule Universität Kindergarten Spielplatz Schwimmbad Stadion Kino Theater Museum Kirche Rathaus Brücke Tunnel Straße Autobahn Fahrrad Motorrad Lastwagen Traktor Hubschrauber Rakete Satellit Planet Galaxie Universum Wissenschaft Forschung Experiment Labor Chemie Physik Biologie Mathematik Geschichte Geographie Sprache Grammatik Vokabel Wörterbuch Übersetzung Erzählung Gedicht Roman Krimi Komödie Tragödie Schauspieler Regisseur Mikrofon Lautsprecher Kopfhörer Bildschirm Tastatur Drucker Scanner Internet Website Programm Software Hardware Datenbank Server Netzwerk Passwort Sicherheit Virenschutz Update Download Upload Nachricht Anruf Gespräch Diskussion Meinung Argument Beweis Frage Antwort Problem Lösung Idee Plan Projekt Ziel Erfolg Fehler Versuch Ergebnis Erfahrung Wissen Bildung Ausbildung Studium Prüfung Zeugnis Klasse Kurs Seminar Vorlesung Professor Student Schüler Hausaufgabe Pause Ferien Urlaub Reise Ausflug Wanderung Abenteuer Erlebnis Erinnerung Gefühl Emotion Freude Trauer Angst Mut Hoffnung Liebe Freundschaft Familie Verwandte Gesellschaft Gemeinschaft Kultur Tradition Religion Politik Wirtschaft Industrie Handwerk Landwirtschaft Technik Erfindung Entdeckung Fortschritt Zukunft Vergangenheit Gegenwart Augenblick Moment Sekunde Minute Stunde Woche Monat Jahr Jahrzehnt Jahrhundert Jahrtausend Zeitraum Kalender Datum Geburtstag Feiertag Wochenende Montag Dienstag Mittwoch Donnerstag Freitag Samstag Sonntag Januar Februar März April Juni Juli August September Oktober November Dezember Frühling Sommer Herbst Winter Morgen Mittag Abend Nacht Sonnenaufgang Sonnenuntergang Mondlicht Sternenhimmel Regenbogen Gewitter Blitz Donner Sturm Orkan Tornado Erdbeben Überschwemmung Dürre Hitze Kälte Frost Eis Schneefall Nebel Dunst Tau Reif`.split(/\s+/).filter(Boolean),
 
-  schwer: `Wahrscheinlichkeit Geschwindigkeit Möglichkeiten Verantwortung Zusammenarbeit Kommunikation Information Organisation Konzentration Motivation Kreativität Flexibilität Professionalität Persönlichkeit Eigenschaft Fähigkeit Fertigkeit Kenntnisse Erfahrungen Erkenntnisse Wissenschaftler Forscher Entdecker Erfinder Ingenieur Architekt Journalist Fotograf Musiker Komponist Dirigent Schriftsteller Dichter Maler Bildhauer Designer Programmierer Entwickler Administrator Assistent Manager Direktor Präsident Kanzler Minister Abgeordneter Bürgermeister Polizistin Feuerwehrfrau Krankenschwester Apotheker Zahnarzt Tierarzt Anwalt Richter Notar Steuerberater Buchhalter Verkäufer Kellner Bäcker Metzger Friseur Gärtner Landwirt Handwerker Tischler Schreiner Maurer Dachdecker Elektriker Installateur Mechaniker Schlosser Schweißer Bauingenieur Maschinenbau Elektrotechnik Mechatronik Informatik Pharmazie Psychologie Soziologie Philosophie Theologie Pädagogik Didaktik Methodik Rhetorik Orthografie Interpunktion Silbentrennung Großschreibung Kleinschreibung Rechtschreibung Zeichensetzung Inhaltsangabe Interpretation Charakterisierung Erörterung Stellungnahme Zusammenfassung Beschreibung Berichterstattung Dokumentation Präsentation Moderation Debatte Argumentation Widerlegung Begründung Schlussfolgerung Voraussetzung Bedingung Konsequenz Kausalität Statistik Analyse Synthese Hypothese Theorie Praxis Methode Strategie Taktik Konzept Struktur System Prozess Verfahren Technologie Innovation Revolution Evolution Transformation Modifikation Variation Kombination Integration Migration Immigration Emigration Population Generation Situation Position Funktion Reaktion Aktion Interaktion Kooperation Kollaboration Konfrontation Konflikt Kompromiss Konsens Dissens Diskurs Dialog Monolog Prolog Epilog Katalog Analogie Anomalie Symmetrie Asymmetrie Hierarchie Monarchie Demokratie Aristokratie Bürokratie Autokratie Theokratie Anarchie Oligarchie Plutokratie Meritokratie Technokratie Atmosphäre Stratosphäre Ionosphäre Biosphäre Ökosphäre Hydrosphäre Lithosphäre`.split(/\s+/).filter(Boolean),
+  schwer: `Wahrscheinlichkeit Geschwindigkeit Verantwortung Zusammenarbeit Kommunikation Information Organisation Konzentration Motivation Kreativität Flexibilität Professionalität Persönlichkeit Eigenschaft Fähigkeit Fertigkeit Kenntnisse Erfahrungen Erkenntnisse Wissenschaftler Forscher Entdecker Erfinder Ingenieur Architekt Journalist Fotograf Musiker Komponist Dirigent Schriftsteller Dichter Maler Bildhauer Designer Programmierer Entwickler Administrator Assistent Manager Direktor Präsident Kanzler Minister Abgeordneter Bürgermeister Polizistin Feuerwehrfrau Krankenschwester Apotheker Zahnarzt Tierarzt Anwalt Richter Notar Steuerberater Buchhalter Verkäufer Kellner Bäcker Metzger Friseur Gärtner Landwirt Handwerker Tischler Schreiner Maurer Dachdecker Elektriker Installateur Mechaniker Schlosser Schweißer Bauingenieur Maschinenbau Elektrotechnik Mechatronik Informatik Pharmazie Psychologie Soziologie Philosophie Theologie Pädagogik Didaktik Methodik Rhetorik Orthografie Interpunktion Silbentrennung Großschreibung Kleinschreibung Rechtschreibung Zeichensetzung Inhaltsangabe Interpretation Charakterisierung Erörterung Stellungnahme Zusammenfassung Beschreibung Berichterstattung Dokumentation Präsentation Moderation Debatte Argumentation Widerlegung Begründung Schlussfolgerung Voraussetzung Bedingung Konsequenz Kausalität Statistik Analyse Synthese Hypothese Theorie Praxis Methode Strategie Taktik Konzept Struktur System Prozess Verfahren Technologie Innovation Revolution Evolution Transformation Modifikation Variation Kombination Integration Migration Immigration Emigration Population Generation Situation Position Funktion Reaktion Aktion Interaktion Kooperation Kollaboration Konfrontation Konflikt Kompromiss Konsens Dissens Diskurs Dialog Monolog Prolog Epilog Katalog Analogie Anomalie Symmetrie Asymmetrie Hierarchie Monarchie Demokratie Aristokratie Bürokratie Autokratie Theokratie Anarchie Oligarchie Plutokratie Meritokratie Technokratie Atmosphäre Stratosphäre Ionosphäre Biosphäre Ökosphäre Hydrosphäre Lithosphäre`.split(/\s+/).filter(Boolean),
 
-  unmöglich: `Hilfeleistungslöschgruppenfahrzeug Rindfleischetikettierungsüberwachungsaufgabenübertragungsgesetz Donaudampfschifffahrtsgesellschaftskapitän Rechtsschutzversicherungsgesellschaften Bundesausbildungsförderungsgesetz Kraftfahrzeughaftpflichtversicherung Arbeiterunfallversicherungsgesetz Lebensmittelverschwendungsverordnung Bundesdatenschutzbeauftragter Datenschutzgrundverordnung Grundstücksverkehrsgenehmigungszuständigkeitsübertragungsverordnung Krankenversicherungsbeitragssatz Krankenversicherungsbeitragsbemessungsgrenze Rentenversicherungsbeitragssatz Pflegeversicherungsbeitrag Arbeitslosenversicherungsbeitrag Sozialversicherungsbeitrag Sozialversicherungsträger Sozialversicherungsnummer Sozialversicherungsausweis Sozialversicherungssystem Sozialversicherungsrecht Sozialversicherungsgesetz Sozialversicherungsanstalt Sozialversicherungskasse Einkommensteuererklärung Einkommensteuergesetz Einkommensteuertarif Einkommensteuervorauszahlung Einkommensteuerbescheid Einkommensteuerpflicht Einkommensteuerhinterziehung Einkommensteuerreform Körperschaftsteuererklärung Gewerbesteuererklärung Umsatzsteuererklärung Umsatzsteuervoranmeldung Umsatzsteueridentifikationsnummer Umsatzsteuergesetz Umsatzsteuerpflicht Umsatzsteuerbefreiung Umsatzsteuererstattung Krankenhausfinanzierungsgesetz Krankenhausbehandlungsfehler Krankenhausentlassungsmanagement Krankenhaushygieneverordnung Krankenhausnotaufnahme Krankenhausverwaltung Krankenhausapotheke Bundesverkehrsministerium Bundesumweltministerium Bundesgesundheitsministerium Bundesbildungsministerium Bundesfinanzministerium Bundesarbeitsministerium Bundeswirtschaftsministerium Bundeslandwirtschaftsministerium Bundesverteidigungsministerium Bundesinnenministerium Bundesjustizministerium Bundesfamilienministerium Bundesentwicklungsministerium Weltgesundheitsorganisation Welternährungsorganisation Weltraumforschungsorganisation Atomkraftwerksbetreiber Atomkraftwerkssicherheit Atomkraftwerksunfall Atomkraftwerksstandort Atommüllendlager Atommülltransport Atommüllentsorgung Atommülllagerung Atommüllzwischenlager Gentechnikgesetz Gentechnikverordnung Gentechnologie Gentechniklabor Gentechnikforschung Gentechnikunternehmen Gentechnikkritiker Gentechnikbefürworter Klimaschutzabkommen Klimaschutzgesetz Klimaschutzziel Klimaschutzpolitik Klimaschutzmaßnahme Klimaschutzprogramm Klimaschutzkonferenz Klimawandelforschung Klimawandelanpassung Klimawandelauswirkung Klimawandelbekämpfung Klimawandelkonferenz Klimawandelmodell Klimawandelprognose Klimawandelstudie Klimawandelbericht Umweltverschmutzung Umweltschutzorganisation Umweltschutzgesetz Umweltschutzbehörde Umweltschutzministerium Umweltschutzmaßnahme Umweltschutztechnik Umweltschutzpolitik Umweltschutzbeauftragter Umweltschutzverband Umweltschutzaktivist Umweltschutzingenieur Umweltschutzkonferenz Donaudampfschifffahrtsgesellschaft Donaudampfschifffahrtskapitän Donaudampfschifffahrtsgesellschaftskapitän Donaudampfschifffahrtsgesellschaftskapitänswitwe Donaudampfschifffahrtsgesellschaftskapitänswitwenrente Donaudampfschifffahrtsgesellschaftskapitänskajüte Donaudampfschifffahrtsgesellschaftskapitänsmütze Donaudampfschifffahrtsgesellschaftskapitänsuniform Schifffahrtsgesellschaft Schifffahrtsgesellschaftskapitän Schifffahrtsgesellschaftsmitarbeiter Schifffahrtsgesellschaftsvorstand Schifffahrtsgesellschaftsaktie Schifffahrtsgesellschaftsbüro Schifffahrtsgesellschaftsgebäude Rechtschreibprüfung Rechtschreibfehler Rechtschreibkorrektur Rechtschreibregel Rechtschreibreform Rechtschreibschwäche Rechtschreibprogramm Rechtschreibprüfungsprogramm Rechtschreibkorrekturprogramm Rechtschreibfehlerkorrektur Krankenversicherungskarte Krankenversicherungsnummer Krankenversicherungsbeitrag Krankenversicherungsschutz Krankenversicherungsgesellschaft Krankenversicherungsvertrag Krankenversicherungsprämie Krankenversicherungssystem Krankenversicherungspflicht Krankenversicherungspflichtgrenze Kraftfahrzeugzulassungsstelle Kraftfahrzeugzulassungsbehörde Fahrzeugidentifikationsnummer Fahrzeugsicherheitskontrollsystem Verkehrszeichenerkennungssystem Verkehrssicherheitsbehörde Verkehrsunfallflucht Verkehrssicherheitsrat Verkehrserziehungsunterricht Verkehrsberuhigungsmaßnahme Verkehrsleitsystem Verkehrsministerium Verkehrsflugzeug Verkehrskontrolle Verkehrspolizei Straßenverkehrsordnung Straßenverkehrsamt Straßenverkehrsgesetz Straßenverkehrsbehörde Straßenverkehrsgefährdung Straßenbahnfahrer Straßenbahnhaltestelle Straßenbahngesellschaft Straßenbahnverkehr Straßenbahnunfall Straßenbahnfahrplan`.split(/\s+/).filter(Boolean),
+  unmöglich: `Hilfeleistungslöschgruppenfahrzeug Rindfleischetikettierungsüberwachungsaufgabenübertragungsgesetz Lebensmittelverschwendungsverordnung Datenschutzgrundverordnung Bundesdatenschutzbeauftragter Rechtsschutzversicherungsgesellschaft Bundesausbildungsförderungsgesetz Kraftfahrzeughaftpflichtversicherung Arbeiterunfallversicherungsgesetz Grundstücksverkehrsgenehmigungszuständigkeitsübertragungsverordnung Donaudampfschifffahrtsgesellschaftskapitän Donaudampfschifffahrtsgesellschaftskapitänswitwe Donaudampfschifffahrtsgesellschaftskapitänskajüte Oberammergauerpassionsspiel Binnenlandsschifffahrtsstraßenordnung Verkehrsinfrastrukturfinanzierungsgesellschaft Straßenverkehrsordnungswidrigkeit Straßenverkehrszulassungsordnung Betriebsverfassungsgesetz Handelsgesetzbuch Bürgerlichesgesetzbuch Strafgesetzbuch Sozialgesetzbuch Baugesetzbuch Steuerberatungsgesetz Wirtschaftsprüferordnung Versicherungsvertragsgesetz Kraftfahrzeugsteuergesetz Personenbeförderungsgesetz Güterkraftverkehrsgesetz Telekommunikationsgesetz Energiewirtschaftsgesetz Kreislaufwirtschaftsgesetz Wasserhaushaltsgesetz Bundesimmissionsschutzgesetz Bundesnaturschutzgesetz Tierschutzgesetz Lebensmittelhygieneverordnung Trinkwasserverordnung Gefahrstoffverordnung Betriebssicherheitsverordnung Arbeitsstättenverordnung Arbeitszeitgesetz Bundesurlaubsgesetz Entgeltfortzahlungsgesetz Kündigungsschutzgesetz Betriebsrentengesetz Pflegezeitgesetz Familienpflegezeitgesetz Elterngeldgesetz Mutterschutzgesetz Jugendarbeitsschutzgesetz Schwerbehindertengesetz Behindertengleichstellungsgesetz Antidiskriminierungsgesetz Teilzeitbefristungsgesetz Arbeitnehmerüberlassungsgesetz Mindestlohngesetz Tarifautonomiestärkungsgesetz Rentenversicherungsnachhaltigkeitsgesetz Alterssicherungsgesetz Betriebsrentenstärkungsgesetz Pflegestärkungsgesetz Krankenhausstrukturgesetz Versorgungsstrukturgesetz Arzneimittelversorgungsgesetz Infektionsschutzgesetz Masernschutzgesetz Impfschutzgesetz Bevölkerungsschutzgesetz Katastrophenschutzgesetz Zivilschutzgesetz Wehrpflichtgesetz Soldatengesetz Beamtenstatusgesetz Bundesbeamtengesetz Richtergesetz Notarstandsgesetz Rechtsanwaltsordnung Patentanwaltsordnung Steuerberatungsordnung Handwerksordnung Gewerbeordnung Aktiengesetz Genossenschaftsgesetz Umwandlungsgesetz Insolvenzordnung Zivilprozessordnung Strafprozessordnung Verwaltungsgerichtsordnung Finanzgerichtsordnung Sozialgerichtsgesetz Arbeitsgerichtsgesetz Verwaltungsverfahrensgesetz Verwaltungszustellungsgesetz Verwaltungsvollstreckungsgesetz Informationsfreiheitsgesetz Umweltinformationsgesetz Verbraucherinformationsgesetz Wirtschaftsstabilisierungsfondsgesetz Finanzmarktstabilisierungsgesetz Einlagensicherungsgesetz Kreditwesengesetz Wertpapierhandelsgesetz Börsengesetz Kapitalanlagegesetzbuch Versicherungsaufsichtsgesetz Zahlungsdiensteaufsichtsgesetz Fahrzeugidentifikationsnummer Verkehrszeichenerkennungssystem Fahrerassistenzsystem Programmierschnittstelle Datenbankmanagementsystem Computersystemadministrator Verschlüsselungstechnik Kryptographietechnik Drehleiterfahrzeug Rüstwagen Gerätewagen Mannschaftstransportfahrzeug Einsatzleitwagen Kommandowagen Hubrettungsfahrzeug Tanklöschfahrzeug Löschgruppenfahrzeug Personenkraftwagen Nutzfahrzeugindustrie Maschinenbauingenieurwesen Elektrotechnikstudium Informationstechnologie Telekommunikationsunternehmen Energieversorgungsunternehmen Versorgungsnetzbetreiber Bauleitplanungsverfahren Baugenehmigungsverfahren Grundbuchamt Katasteramt Wasseraufbereitungsanlage Abwasserentsorgungsbetrieb Müllverbrennungsanlage Recyclingwirtschaft Kreislaufwirtschaft Entsorgungswirtschaft Verpackungsverordnung Elektroschrottverordnung Batterieverordnung Altfahrzeugverordnung Chemikalienverordnung Pflanzenschutzmittelverordnung Düngemittelverordnung Futtermittelverordnung Tierarzneimittelverordnung Tierimpfstoffverordnung Arzneimittelzulassungsverordnung Medizinprodukteverordnung Krankenhausentlassungsmanagement Notaufnahmestation Facharztausbildung Approbationsordnung Heilmittelverordnung Pharmakovigilanzsystem Qualitätssicherungsmaßnahme Risikomanagementsystem Sicherheitsbeauftragter Datenschutzbeauftragter Gleichstellungsbeauftragter Behindertenbeauftragter Tierschutzbeauftragter Umweltschutzbeauftragter Bundesrechnungshof Landesrechnungshof Rechnungshofbericht Rechnungsprüfungsamt Prüfungsausschuss Hauptversammlung Aufsichtsrat Vorstandsvorsitzender Geschäftsführerbetriebsrat Personalvertretungsgesetz Bundespersonalvertretungsgesetz Landespersonalvertretungsgesetz Mitbestimmungsgesetz Betriebsverfassungsnovelle Unternehmensmitbestimmung Qualitätsmanagement Umweltmanagement Energiemanagement Sicherheitsmanagement Wissensmanagement Changemanagement Projektmanagement Prozessoptimierung Geschäftsprozessoptimierung Effizienzsteigerung Produktivitätssteigerung Wettbewerbsfähigkeit Zukunftsfähigkeit Nachhaltigkeitsstrategie Digitalisierungsstrategie Innovationsstrategie Wachstumsstrategie Vertriebsstrategie Marketingstrategie Kommunikationsstrategie Unternehmensstrategie`.split(/\s+/).filter(Boolean),
 };
 
 // ============================================================
-//  STATE
-// ============================================================
-const SESSION_LENGTH = 25;
-
-const state = {
-  screen: 'menu',
-  difficulty: 'einfach',
-  wordPool: [],
-  currentIndex: 0,
-  currentWord: '',
-  input: '',
-  lastInputLength: 0,
-  wordsCompleted: 0,
-  totalErrors: 0,
-  totalCharsTyped: 0,
-  streak: 0,
-  bestStreak: 0,
-  startTime: null,
-  sessionComplete: false,
-};
-
-// ============================================================
-//  DOM
-// ============================================================
-const menuEl = document.getElementById('menu');
-const playEl = document.getElementById('play');
-const resultsEl = document.getElementById('results');
-const wordDisplayEl = document.getElementById('wordDisplay');
-const hiddenInput = document.getElementById('hiddenInput');
-const quitBtn = document.getElementById('quitBtn');
-const menuBtn = document.getElementById('menuBtn');
-const progressFill = document.getElementById('progressFill');
-const wordProgressEl = document.getElementById('wordProgress');
-const accuracyValEl = document.getElementById('accuracyVal');
-const streakValEl = document.getElementById('streakVal');
-const resultWords = document.getElementById('resultWords');
-const resultAccuracy = document.getElementById('resultAccuracy');
-const resultStreak = document.getElementById('resultStreak');
-const resultTime = document.getElementById('resultTime');
-
-// ============================================================
-//  HELPERS
+//  DIVERSITY-SHUFFLE
 // ============================================================
 function shuffle(arr) {
   const a = arr.slice();
@@ -394,61 +575,72 @@ function shuffle(arr) {
   return a;
 }
 
-function show(screen) {
-  state.screen = screen;
-  menuEl.classList.toggle('hidden', screen !== 'menu');
-  playEl.classList.toggle('hidden', screen !== 'play');
-  resultsEl.classList.toggle('hidden', screen !== 'results');
-}
-
-// ============================================================
-//  GAME LOGIC
-// ============================================================
-function startGame(difficulty) {
-  state.difficulty = difficulty;
-  state.wordPool = shuffle(WORDS[difficulty]);
-  state.currentIndex = 0;
-  state.currentWord = state.wordPool[0];
-  state.input = '';
-  state.lastInputLength = 0;
-  state.wordsCompleted = 0;
-  state.totalErrors = 0;
-  state.totalCharsTyped = 0;
-  state.streak = 0;
-  state.bestStreak = 0;
-  state.startTime = Date.now();
-  state.sessionComplete = false;
-
-  hiddenInput.value = '';
-  updateHUD();
-  renderWord();
-  show('play');
-
-  // Fokus setzen (mobile keyboard öffnen)
-  setTimeout(() => hiddenInput.focus(), 50);
-}
-
-function renderWord() {
-  const target = state.currentWord;
-  const input = state.input;
-  let html = '';
-  for (let i = 0; i < target.length; i++) {
-    let cls = 'char';
-    if (i < input.length) {
-      if (input[i].toLowerCase() === target[i].toLowerCase()) {
-        cls += ' correct';
-      } else {
-        cls += ' wrong';
-      }
-    } else if (i === input.length) {
-      cls += ' current';
-    }
-    const ch = target[i] === ' ' ? '&nbsp;' : escapeHtml(target[i]);
-    html += `<span class="${cls}">${ch}</span>`;
+function buildSessionPool(allWords) {
+  const groups = new Map();
+  for (const w of allWords) {
+    const key = w.toLowerCase().slice(0, 6);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(w);
   }
-  wordDisplayEl.innerHTML = html;
+  let shuffledGroups = [];
+  for (const g of groups.values()) shuffledGroups.push(shuffle(g));
+  shuffledGroups = shuffle(shuffledGroups);
+  const result = [];
+  let round = 0, anyAdded = true;
+  while (anyAdded) {
+    anyAdded = false;
+    for (const g of shuffledGroups) {
+      if (round < g.length) { result.push(g[round]); anyAdded = true; }
+    }
+    round++;
+  }
+  return result;
 }
 
+// ============================================================
+//  STATE
+// ============================================================
+const SESSION_LENGTH = 25;
+
+const state = {
+  difficulty: 'einfach',
+  wordPool: [],
+  currentIndex: 0,
+  currentWord: '',
+  input: '',
+  lastInputLength: 0,
+  wordsCompleted: 0,
+  correctChars: 0,
+  wrongChars: 0,
+  startTime: 0,
+  elapsed: 0,
+  sessionComplete: false,
+  playing: false,
+  shakeTimeout: null,
+};
+
+// ============================================================
+//  DOM
+// ============================================================
+const wordDisplayEl = document.getElementById('wordDisplay');
+const hiddenInput = document.getElementById('hiddenInput');
+const menuOverlay = document.getElementById('menuOverlay');
+const resultsOverlay = document.getElementById('resultsOverlay');
+const progressFill = document.getElementById('progressFill');
+const progressLabel = document.getElementById('progressLabel');
+const statWpm = document.getElementById('statWpm');
+const statAcc = document.getElementById('statAcc');
+const statTime = document.getElementById('statTime');
+const resWpm = document.getElementById('resWpm');
+const resAcc = document.getElementById('resAcc');
+const resChars = document.getElementById('resChars');
+const resTime = document.getElementById('resTime');
+const resRestart = document.getElementById('resRestart');
+const resMenu = document.getElementById('resMenu');
+
+// ============================================================
+//  HELPERS
+// ============================================================
 function escapeHtml(c) {
   if (c === '&') return '&amp;';
   if (c === '<') return '&lt;';
@@ -456,40 +648,128 @@ function escapeHtml(c) {
   return c;
 }
 
-function updateHUD() {
-  wordProgressEl.textContent = Math.min(state.wordsCompleted + 1, SESSION_LENGTH) + '/' + SESSION_LENGTH;
-  const totalTyped = state.totalCharsTyped + state.totalErrors;
-  const acc = totalTyped === 0 ? 100 : Math.max(0, Math.round((state.totalCharsTyped / totalTyped) * 100));
-  accuracyValEl.textContent = acc + '%';
-  streakValEl.textContent = state.streak;
-  const pct = (state.wordsCompleted / SESSION_LENGTH) * 100;
-  progressFill.style.width = pct + '%';
+function formatTime(sec) {
+  const s = Math.floor(sec);
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return m + ':' + String(r).padStart(2, '0');
 }
 
-function onWordComplete() {
-  // Absolutes Wort abgeschlossen
-  state.wordsCompleted++;
-  state.streak++;
-  if (state.streak > state.bestStreak) state.bestStreak = state.streak;
-  state.totalCharsTyped += state.currentWord.length;
+// ============================================================
+//  START
+// ============================================================
+function startGame(difficulty) {
+  state.difficulty = difficulty;
+  state.wordPool = buildSessionPool(WORDS[difficulty]);
+  state.currentIndex = 0;
+  state.currentWord = state.wordPool[0];
+  state.input = '';
+  state.lastInputLength = 0;
+  state.wordsCompleted = 0;
+  state.correctChars = 0;
+  state.wrongChars = 0;
+  state.startTime = performance.now();
+  state.elapsed = 0;
+  state.sessionComplete = false;
+  state.playing = true;
 
-  // Animation
-  wordDisplayEl.classList.add('complete');
+  hiddenInput.value = '';
+  menuOverlay.classList.add('hidden');
+  resultsOverlay.classList.add('hidden');
 
-  // Nächstes Wort
-  state.currentIndex++;
-  if (state.currentIndex >= state.wordPool.length) {
-    // Pool neu mischen
-    state.wordPool = shuffle(WORDS[state.difficulty]);
-    state.currentIndex = 0;
+  renderWord();
+  updateStats();
+  updateProgress();
+  focusInput();
+}
+
+function focusInput() {
+  setTimeout(() => {
+    try { hiddenInput.focus({ preventScroll: true }); } catch(e) { hiddenInput.focus(); }
+  }, 30);
+}
+
+// ============================================================
+//  RENDER
+// ============================================================
+function renderWord() {
+  const target = state.currentWord;
+  const input = state.input;
+  let html = '';
+
+  for (let i = 0; i < target.length; i++) {
+    let cls = 'letter';
+    if (i < input.length) {
+      if (input[i].toLowerCase() === target[i].toLowerCase()) {
+        cls += ' correct';
+      } else {
+        cls += ' wrong';
+      }
+    } else if (i === input.length) {
+      cls += ' caret';
+    }
+    html += '<span class="' + cls + '">' + escapeHtml(target[i]) + '</span>';
   }
+
+  // extra chars beyond word length
+  for (let i = target.length; i < input.length; i++) {
+    html += '<span class="letter extra">' + escapeHtml(input[i]) + '</span>';
+  }
+
+  // caret at end when input has reached end of word
+  if (input.length >= target.length) {
+    html += '<span class="letter caret" style="width:0">&nbsp;</span>';
+  }
+
+  wordDisplayEl.innerHTML = html;
+}
+
+function updateProgress() {
+  const pct = (state.wordsCompleted / SESSION_LENGTH) * 100;
+  progressFill.style.width = pct + '%';
+  progressLabel.textContent = Math.min(state.wordsCompleted + 1, SESSION_LENGTH) + ' / ' + SESSION_LENGTH;
+}
+
+// ============================================================
+//  STATS
+// ============================================================
+function updateStats() {
+  const total = state.correctChars + state.wrongChars;
+  const acc = total === 0 ? 100 : Math.round((state.correctChars / total) * 100);
+  const minutes = state.elapsed / 60;
+  const wpm = minutes > 0.01 ? Math.round((state.correctChars / 5) / minutes) : 0;
+
+  statWpm.textContent = wpm;
+  statAcc.textContent = acc + '%';
+  statTime.textContent = formatTime(state.elapsed);
+}
+
+function updateElapsed() {
+  if (!state.playing || state.sessionComplete) return;
+  state.elapsed = (performance.now() - state.startTime) / 1000;
+}
+
+// ============================================================
+//  WORD COMPLETE
+// ============================================================
+function onWordComplete() {
+  state.wordsCompleted++;
 
   if (state.wordsCompleted >= SESSION_LENGTH) {
     state.sessionComplete = true;
-    setTimeout(endGame, 350);
+    state.playing = false;
+    updateElapsed();
+    updateStats();
+    setTimeout(endGame, 400);
     return;
   }
 
+  wordDisplayEl.classList.add('complete');
+
+  state.currentIndex++;
+  if (state.currentIndex + 8 >= state.wordPool.length) {
+    state.wordPool = state.wordPool.concat(buildSessionPool(WORDS[state.difficulty]));
+  }
   state.currentWord = state.wordPool[state.currentIndex];
   state.input = '';
   state.lastInputLength = 0;
@@ -498,102 +778,174 @@ function onWordComplete() {
   setTimeout(() => {
     wordDisplayEl.classList.remove('complete');
     renderWord();
-    updateHUD();
-  }, 220);
+    updateStats();
+    updateProgress();
+  }, 200);
 }
 
 function endGame() {
-  const elapsed = (Date.now() - state.startTime) / 1000;
-  const totalTyped = state.totalCharsTyped + state.totalErrors;
-  const acc = totalTyped === 0 ? 100 : Math.max(0, Math.round((state.totalCharsTyped / totalTyped) * 100));
+  updateElapsed();
+  const total = state.correctChars + state.wrongChars;
+  const acc = total === 0 ? 100 : Math.round((state.correctChars / total) * 100);
+  const minutes = state.elapsed / 60;
+  const wpm = minutes > 0.01 ? Math.round((state.correctChars / 5) / minutes) : 0;
 
-  resultWords.textContent = state.wordsCompleted;
-  resultAccuracy.textContent = acc + '%';
-  resultStreak.textContent = state.bestStreak;
-  resultTime.textContent = elapsed.toFixed(1) + 's';
+  resWpm.textContent = wpm;
+  resAcc.textContent = acc + '%';
+  resChars.innerHTML = '<span style="color:#5ecf7a">' + state.correctChars + '</span>' +
+                       '<span style="color:#646669"> / </span>' +
+                       '<span style="color:#ca4754">' + state.wrongChars + '</span>';
+  resTime.textContent = formatTime(state.elapsed);
 
-  show('results');
+  resultsOverlay.classList.remove('hidden');
+  hiddenInput.blur();
 }
 
 // ============================================================
-//  INPUT HANDLING
+//  INPUT
 // ============================================================
 hiddenInput.addEventListener('input', (e) => {
-  if (state.sessionComplete) return;
+  if (state.sessionComplete || !state.playing) return;
 
   const val = e.target.value;
   const target = state.currentWord;
 
-  // Komplett richtig?
-  if (val.toLowerCase() === target.toLowerCase()) {
-    state.input = val;
-    renderWord();
-    onWordComplete();
-    return;
-  }
-
-  // Neue Zeichen zählen (nur bei Zunahme der Länge)
+  // Char-Zählung
   if (val.length > state.lastInputLength) {
-    let newErrors = 0;
     for (let i = state.lastInputLength; i < val.length; i++) {
-      if (i < target.length && val[i].toLowerCase() !== target[i].toLowerCase()) {
-        newErrors++;
-      } else if (i >= target.length) {
-        newErrors++;
+      if (i < target.length && val[i].toLowerCase() === target[i].toLowerCase()) {
+        state.correctChars++;
+      } else {
+        state.wrongChars++;
       }
     }
-    if (newErrors > 0) {
-      state.totalErrors += newErrors;
-      state.streak = 0;
+  } else if (val.length < state.lastInputLength) {
+    for (let i = val.length; i < state.lastInputLength; i++) {
+      if (i < target.length && val[i].toLowerCase() === target[i].toLowerCase()) {
+        state.correctChars = Math.max(0, state.correctChars - 1);
+      } else {
+        state.wrongChars = Math.max(0, state.wrongChars - 1);
+      }
+    }
+  }
+
+  // shake on newly typed wrong char
+  if (val.length > state.lastInputLength) {
+    const lastIdx = val.length - 1;
+    if (lastIdx < target.length && val[lastIdx].toLowerCase() !== target[lastIdx].toLowerCase()) {
+      if (state.shakeTimeout) clearTimeout(state.shakeTimeout);
       wordDisplayEl.classList.add('shake');
-      setTimeout(() => wordDisplayEl.classList.remove('shake'), 360);
+      state.shakeTimeout = setTimeout(() => wordDisplayEl.classList.remove('shake'), 320);
     }
   }
 
   state.lastInputLength = val.length;
   state.input = val;
+
+  // Wort komplett?
+  if (val.toLowerCase() === target.toLowerCase()) {
+    renderWord();
+    onWordComplete();
+    return;
+  }
+
   renderWord();
-  updateHUD();
+  updateStats();
 });
 
-// Verhindere Cursor-Bewegungen, die das input-Feld verwirren
 hiddenInput.addEventListener('keydown', (e) => {
-  // Erlaube nur Backspace und normales Tippen
-  if (e.key === 'Enter') {
+  if (e.key === 'Enter') e.preventDefault();
+  if (e.key === 'Tab') {
     e.preventDefault();
+    if (state.playing) restart();
   }
-});
-
-// Tippen irgendwo auf den Play-Screen fokussiert das Input-Feld
-playEl.addEventListener('pointerdown', (e) => {
-  if (state.screen === 'play' && e.target.tagName !== 'BUTTON') {
+  if (e.key === 'Escape') {
     e.preventDefault();
-    hiddenInput.focus();
+    if (state.playing) backToMenu();
   }
 });
 
 // ============================================================
-//  EVENT LISTENERS
+//  FLOW
 // ============================================================
-document.querySelectorAll('.diff-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
+function restart() {
+  startGame(state.difficulty);
+}
+
+function backToMenu() {
+  state.playing = false;
+  state.sessionComplete = true;
+  state.input = '';
+  state.currentWord = '';
+  wordDisplayEl.innerHTML = '';
+  resultsOverlay.classList.add('hidden');
+  menuOverlay.classList.remove('hidden');
+  hiddenInput.blur();
+}
+
+// ============================================================
+//  BUTTONS
+// ============================================================
+document.querySelectorAll('.cfg-row').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
     startGame(btn.dataset.diff);
   });
 });
 
-quitBtn.addEventListener('click', () => {
-  show('menu');
-  hiddenInput.blur();
+resRestart.addEventListener('click', () => {
+  startGame(state.difficulty);
 });
 
-menuBtn.addEventListener('click', () => {
-  show('menu');
+resMenu.addEventListener('click', () => {
+  backToMenu();
 });
 
-// Verhindere, dass das Input-Feld jemals den Fokus verliert während des Spiels
+// ============================================================
+//  FOCUS MANAGEMENT (Mobile)
+// ============================================================
+// Tap anywhere on the play screen -> focus input
+document.addEventListener('pointerdown', (e) => {
+  if (!state.playing || state.sessionComplete) return;
+  if (resultsOverlay.classList.contains('hidden') === false) return;
+  if (menuOverlay.classList.contains('hidden') === false) return;
+  if (e.target.tagName === 'BUTTON') return;
+  e.preventDefault();
+  focusInput();
+}, { passive: false });
+
 hiddenInput.addEventListener('blur', () => {
-  if (state.screen === 'play' && !state.sessionComplete) {
-    setTimeout(() => hiddenInput.focus(), 10);
+  if (!state.playing || state.sessionComplete) return;
+  if (!menuOverlay.classList.contains('hidden')) return;
+  if (!resultsOverlay.classList.contains('hidden')) return;
+  setTimeout(() => {
+    if (state.playing && !state.sessionComplete) focusInput();
+  }, 10);
+});
+
+// prevent page scroll on mobile
+document.addEventListener('touchmove', (e) => {
+  if (e.target.closest('#resultsOverlay')) return;
+  e.preventDefault();
+}, { passive: false });
+
+// ============================================================
+//  TIMER
+// ============================================================
+setInterval(() => {
+  if (!state.playing || state.sessionComplete) return;
+  updateElapsed();
+  updateStats();
+}, 100);
+
+// ============================================================
+//  MENU KEYBOARD
+// ============================================================
+document.addEventListener('keydown', (e) => {
+  if (menuOverlay.classList.contains('hidden')) return;
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    startGame(state.difficulty);
   }
 });
 
