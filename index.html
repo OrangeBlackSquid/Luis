@@ -12,7 +12,7 @@
     -webkit-user-select:none; user-select:none;
     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   }
-  #c { display:block; width:100%; height:100%; }
+  #c { display:block; width:100%; height:100%; touch-action:none; }
   #hud {
     position:absolute; top:0; left:0; right:0; padding:24px;
     display:flex; justify-content:center; pointer-events:none; z-index:10;
@@ -26,6 +26,7 @@
     justify-content:center; align-items:center; gap:14px; z-index:20;
     background:radial-gradient(circle at center,rgba(10,15,30,0.65) 0%,rgba(5,8,16,0.96) 100%);
     cursor:pointer; text-align:center; padding:20px;
+    touch-action:none;
   }
   .screen.hidden { display:none; }
   .title {
@@ -226,8 +227,14 @@ function resetGame() {
 }
 
 // ============ INPUT ============
+let tapLock = false;
+
 function onTap(e) {
-  if (e) e.preventDefault();
+  if (e && e.cancelable) e.preventDefault();
+  if (tapLock) return;
+  tapLock = true;
+  setTimeout(() => { tapLock = false; }, 60);
+
   if (G.mode === 'menu' || G.mode === 'gameover') {
     resetGame();
     return;
@@ -236,14 +243,12 @@ function onTap(e) {
   const p = G.player;
   if (!p || p.mode !== 'orbit') return;
 
-  // Release: tangential velocity
   const t = p.angle;
   p.vx = -Math.sin(t) * FLY_SPEED;
   p.vy = Math.cos(t) * FLY_SPEED;
   p.mode = 'fly';
   G.flyingTime = 0;
 
-  // Release burst
   const dirA = Math.atan2(p.vy, p.vx) + Math.PI;
   for (let i = 0; i < 14; i++) {
     G.particles.push(makeParticle(p.x, p.y, {
@@ -256,9 +261,18 @@ function onTap(e) {
   }
 }
 
-canvas.addEventListener('pointerdown', onTap, { passive: false });
-document.addEventListener('keydown', e => {
-  if (e.code === 'Space' || e.code === 'ArrowUp') {
+// Attach to document so it works regardless of overlays
+document.addEventListener('pointerdown', onTap, { passive: false });
+document.addEventListener('mousedown', (e) => {
+  // Fallback for older browsers
+  if (!window.PointerEvent) onTap(e);
+}, { passive: false });
+document.addEventListener('touchstart', (e) => {
+  // Fallback for older mobile
+  if (!window.PointerEvent) onTap(e);
+}, { passive: false });
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'Enter') {
     e.preventDefault();
     onTap();
   }
@@ -306,7 +320,6 @@ function capturePlayer(planet, dx, dy) {
   G.flash = 0.55;
   G.shake = 6;
 
-  // Burst
   const c = planet.color.main;
   for (let i = 0; i < 22; i++) {
     G.particles.push(makeParticle(p.x, p.y, {
@@ -317,7 +330,6 @@ function capturePlayer(planet, dx, dy) {
       size: rand(1.5, 3.5),
     }));
   }
-  // Expanding ring
   G.particles.push(makeParticle(p.x, p.y, {
     angle: 0, speed: 0, life: 0.45,
     color: c, size: 12, ring: true, drag: 1,
@@ -325,7 +337,6 @@ function capturePlayer(planet, dx, dy) {
 
   while (G.planets.length < 6) spawnNextPlanet();
 
-  // Prune old planets (keep list tight)
   while (G.planets.length > 8 && G.planets[0] !== planet) {
     G.planets.shift();
   }
@@ -345,7 +356,6 @@ function update(dt) {
     updateParticles(dt);
   }
 
-  // Twinkle stars
   for (const s of G.stars) s.twinkle += dt * 2;
 }
 
@@ -365,7 +375,6 @@ function updatePlayer(dt) {
     p.y += p.vy * dt;
     G.flyingTime += dt;
 
-    // Check capture
     for (const planet of G.planets) {
       const dx = p.x - planet.x;
       const dy = p.y - planet.y;
@@ -382,12 +391,10 @@ function updatePlayer(dt) {
       return;
     }
 
-    // Trail
     p.trail.push({ x: p.x, y: p.y, t: 0 });
     for (const tr of p.trail) tr.t += dt;
     p.trail = p.trail.filter(tr => tr.t < TRAIL_LIFETIME);
 
-    // Trail sparks
     if (Math.random() < 0.65) {
       G.particles.push(makeParticle(p.x, p.y, {
         angle: Math.atan2(-p.vy, -p.vx) + rand(-0.5, 0.5),
@@ -428,19 +435,16 @@ function w2s(wx, wy) {
 function render() {
   ctx.save();
 
-  // Screen shake
   if (G.shake > 0.1) {
     ctx.translate(rand(-G.shake, G.shake), rand(-G.shake, G.shake));
   }
 
-  // Background
   const bg = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.85);
   bg.addColorStop(0, '#0d1424');
   bg.addColorStop(1, '#050810');
   ctx.fillStyle = bg;
   ctx.fillRect(-30, -30, W + 60, H + 60);
 
-  // Stars
   for (const s of G.stars) {
     const tw = 0.7 + Math.sin(s.twinkle) * 0.3;
     ctx.globalAlpha = s.alpha * tw;
@@ -451,10 +455,8 @@ function render() {
   }
   ctx.globalAlpha = 1;
 
-  // Planets
   for (const planet of G.planets) drawPlanet(planet);
 
-  // Particles
   for (const pt of G.particles) {
     const sp = w2s(pt.x, pt.y);
     const a = Math.max(0, pt.life / pt.maxLife);
@@ -474,10 +476,8 @@ function render() {
   }
   ctx.globalAlpha = 1;
 
-  // Player
   if (G.player) drawPlayer(G.player);
 
-  // Flash
   if (G.flash > 0) {
     ctx.fillStyle = `rgba(255,255,255,${G.flash * 0.4})`;
     ctx.fillRect(-60, -60, W + 120, H + 120);
@@ -492,7 +492,6 @@ function drawPlanet(planet) {
   if (sp.x < -r * 3 - 100 || sp.x > W + r * 3 + 100 ||
       sp.y < -r * 3 - 100 || sp.y > H + r * 3 + 100) return;
 
-  // Outer glow
   const grd = ctx.createRadialGradient(sp.x, sp.y, r * 0.6, sp.x, sp.y, r * 3.2);
   grd.addColorStop(0, planet.color.glow);
   grd.addColorStop(1, 'rgba(0,0,0,0)');
@@ -501,7 +500,6 @@ function drawPlanet(planet) {
   ctx.arc(sp.x, sp.y, r * 3.2, 0, Math.PI * 2);
   ctx.fill();
 
-  // Body
   const body = ctx.createRadialGradient(
     sp.x - r * 0.3, sp.y - r * 0.35, r * 0.1,
     sp.x, sp.y, r
@@ -513,7 +511,6 @@ function drawPlanet(planet) {
   ctx.arc(sp.x, sp.y, r, 0, Math.PI * 2);
   ctx.fill();
 
-  // Rotating decoration
   ctx.save();
   ctx.translate(sp.x, sp.y);
   ctx.rotate(planet.rotation);
@@ -527,7 +524,6 @@ function drawPlanet(planet) {
   ctx.stroke();
   ctx.restore();
 
-  // Orbit ring if current planet
   if (G.player && G.player.mode === 'orbit' && G.player.planet === planet) {
     ctx.strokeStyle = 'rgba(255,255,255,0.18)';
     ctx.lineWidth = 1;
@@ -542,7 +538,6 @@ function drawPlanet(planet) {
 function drawPlayer(p) {
   const sp = w2s(p.x, p.y);
 
-  // Trail
   for (const tr of p.trail) {
     const a = 1 - tr.t / TRAIL_LIFETIME;
     const s = w2s(tr.x, tr.y);
@@ -554,7 +549,6 @@ function drawPlayer(p) {
   }
   ctx.globalAlpha = 1;
 
-  // Glow
   const glow = ctx.createRadialGradient(sp.x, sp.y, 0, sp.x, sp.y, p.radius * 4.5);
   glow.addColorStop(0, 'rgba(255,255,200,0.8)');
   glow.addColorStop(1, 'rgba(255,255,200,0)');
@@ -563,7 +557,6 @@ function drawPlayer(p) {
   ctx.arc(sp.x, sp.y, p.radius * 4.5, 0, Math.PI * 2);
   ctx.fill();
 
-  // Body
   ctx.fillStyle = '#ffffff';
   ctx.beginPath();
   ctx.arc(sp.x, sp.y, p.radius, 0, Math.PI * 2);
@@ -573,7 +566,6 @@ function drawPlayer(p) {
   ctx.arc(sp.x, sp.y, p.radius * 0.55, 0, Math.PI * 2);
   ctx.fill();
 
-  // Trajectory preview
   if (p.mode === 'orbit') {
     const t = p.angle;
     const dirX = -Math.sin(t);
@@ -581,7 +573,6 @@ function drawPlayer(p) {
     const s = w2s(p.x, p.y);
     const e = w2s(p.x + dirX * PREVIEW_LENGTH, p.y + dirY * PREVIEW_LENGTH);
 
-    // Dashed line
     ctx.strokeStyle = 'rgba(255,255,255,0.42)';
     ctx.lineWidth = 2;
     ctx.setLineDash([7, 9]);
@@ -591,7 +582,6 @@ function drawPlayer(p) {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Arrow
     const ang = Math.atan2(e.y - s.y, e.x - s.x);
     ctx.strokeStyle = 'rgba(255,255,255,0.55)';
     ctx.lineWidth = 2;
