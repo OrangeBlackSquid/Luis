@@ -79,13 +79,14 @@
             gap: 15px;
         }
 
-        /* Design der APB Karten (wie im Bild) */
+        /* Design der APB Karten */
         .note-card {
             background-color: #2c2f33;
             border-radius: 8px;
             padding: 15px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             text-align: left;
+            position: relative; /* Für die Admin Buttons */
         }
 
         .note-card .apb-title {
@@ -107,9 +108,51 @@
             color: #72767d;
             font-size: 0.85em;
         }
+
+        /* Admin Steuerung Design */
+        .admin-controls {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .btn-delete:hover { background-color: #c0392b; }
+
+        .btn-edit {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-edit:hover { background-color: #2980b9; }
+
+        /* Der unsichtbare Admin-Button oben rechts */
+        #adminTrigger {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 60px;
+            height: 60px;
+            cursor: pointer;
+            z-index: 9999;
+            /* Absichtlich unsichtbar */
+            background: transparent;
+            border: none;
+        }
     </style>
 </head>
 <body>
+
+    <!-- Unsichtbarer Klickbereich für Admin-Login -->
+    <div id="adminTrigger" onclick="handleAdminAuth()" title=""></div>
 
     <h1>Luis</h1>
     <h2>APB System</h2>
@@ -126,9 +169,11 @@
     <!-- Firebase SDK laden -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        // WICHTIG: remove und update wurden hier hinzugefügt für die Admin-Funktionen
+        import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         // ==========================================
+        // DEINE FIREBASE KONFIGURATION
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyB5v8vEyaoscAxcP2spKx6WoHGwc29gElA",
@@ -147,30 +192,84 @@
         const notesRef = ref(db, 'apb_notes');
 
         const notesContainer = document.getElementById('notesContainer');
+        
+        // Admin Status und Passwort
+        const ADMIN_CODE = "DLQ33"; // Hier kannst du den Code ändern
+        let isAdmin = localStorage.getItem('isAPBAdmin') === 'true';
 
-        // Funktion zum Abrufen und Anzeigen der Notizen
+        // ==========================================
+        // ADMIN LOGIN / LOGOUT LOGIK
+        // ==========================================
+        window.handleAdminAuth = function() {
+            if (isAdmin) {
+                // Wenn bereits Admin, Code abfragen zum Ausloggen
+                const code = prompt("Du bist Admin. Gib den Code ein, um dich auszuloggen:");
+                if (code === ADMIN_CODE) {
+                    isAdmin = false;
+                    localStorage.removeItem('isAPBAdmin');
+                    alert("Admin-Modus deaktiviert.");
+                    location.reload(); // Seite neu laden, um Admin-Buttons zu entfernen
+                } else if (code !== null) {
+                    alert("Falscher Code! Du bleibst Admin.");
+                }
+            } else {
+                // Wenn nicht Admin, Code abfragen zum Einloggen
+                const code = prompt("Admin-Code eingeben:");
+                if (code === ADMIN_CODE) {
+                    isAdmin = true;
+                    localStorage.setItem('isAPBAdmin', 'true');
+                    alert("Admin-Modus aktiviert!");
+                    location.reload(); // Seite neu laden, um Admin-Buttons anzuzeigen
+                } else if (code !== null) {
+                    alert("Falscher Code!");
+                }
+            }
+        }
+
+        // ==========================================
+        // NOTIZEN ANZEIGEN
+        // ==========================================
         onValue(notesRef, (snapshot) => {
             notesContainer.innerHTML = ''; // Container leeren
             const data = snapshot.val();
             
             if (data) {
                 // Daten in ein Array umwandeln und nach Zeit sortieren (neueste zuerst)
-                const notesArray = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
+                // Object.entries gibt uns die einzigartige ID (key) und das Objekt (note)
+                const notesArray = Object.entries(data).sort((a, b) => b[1].timestamp - a[1].timestamp);
 
-                notesArray.forEach(note => {
+                notesArray.forEach(([id, note]) => {
                     const card = document.createElement('div');
                     card.className = 'note-card';
+                    
+                    // Prüfen ob es eine Admin Note ist
+                    const noteTitle = note.isAdminNote ? 'Admin note' : 'Note';
+                    
+                    // Admin Buttons generieren (nur wenn isAdmin true ist)
+                    let adminButtons = '';
+                    if (isAdmin) {
+                        adminButtons = `
+                            <div class="admin-controls">
+                                <button class="btn-small btn-edit" onclick="editNote('${id}')">Bearbeiten</button>
+                                <button class="btn-small btn-delete" onclick="deleteNote('${id}')">Entfernen</button>
+                            </div>
+                        `;
+                    }
+
                     card.innerHTML = `
                         <div class="apb-title">APB</div>
-                        <div class="note-text">Note: ${note.text}</div>
+                        <div class="note-text">${noteTitle}: ${note.text}</div>
                         <div class="note-meta">By: ${note.author} ${note.dateString}</div>
+                        ${adminButtons}
                     `;
                     notesContainer.appendChild(card);
                 });
             }
         });
 
-        // Funktion zum Hinzufügen einer Notiz
+        // ==========================================
+        // NEUE NOTIZ HINZUFÜGEN
+        // ==========================================
         window.addNote = function() {
             const input = document.getElementById('noteInput');
             const text = input.value.trim();
@@ -186,16 +285,41 @@
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const dateString = `${day}/${month}/${year} ${hours}:${minutes}`;
 
+            // Prüfen, ob man Admin ist
+            const authorName = isAdmin ? 'Admin' : 'Anonym';
+            const isAdminNote = isAdmin ? true : false;
+
             // Daten an Firebase senden
             push(notesRef, {
                 text: text,
-                author: 'Anonym',
+                author: authorName,
+                isAdminNote: isAdminNote,
                 dateString: dateString,
-                timestamp: Date.now() // Für die Sortierung
+                timestamp: Date.now()
             });
 
             // Eingabefeld leeren
             input.value = '';
+        }
+
+        // ==========================================
+        // ADMIN FUNKTIONEN (LÖSCHEN & BEARBEITEN)
+        // ==========================================
+        window.deleteNote = function(id) {
+            if (!isAdmin) return;
+            if (confirm("Willst du diese Notiz wirklich löschen?")) {
+                remove(ref(db, 'apb_notes/' + id));
+            }
+        }
+
+        window.editNote = function(id) {
+            if (!isAdmin) return;
+            const newText = prompt("Bitte gib den neuen Text für diese Notiz ein:");
+            if (newText !== null && newText.trim() !== "") {
+                update(ref(db, 'apb_notes/' + id), {
+                    text: newText.trim()
+                });
+            }
         }
     </script>
 </body>
