@@ -20,401 +20,316 @@
     --error-extra: #7e2a33;
     --caret: #e2b714;
   }
-
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-
   html, body {
     width:100%; height:100%; overflow:hidden;
-    background:var(--bg);
-    color:var(--text);
+    background:var(--bg); color:var(--text);
     font-family:'JetBrains Mono', 'Courier New', monospace;
     -webkit-font-smoothing:antialiased;
     touch-action:manipulation;
-    user-select:none;
-    -webkit-user-select:none;
+    user-select:none; -webkit-user-select:none;
     overscroll-behavior:none;
+    position:fixed;
   }
+  #app { position:relative; width:100vw; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
 
-  #app {
-    position:relative; width:100vw; height:100vh;
-    display:flex; flex-direction:column;
-    overflow:hidden;
-  }
-
-  /* ============ TOP BAR ============ */
   .topbar {
     display:flex; align-items:center; justify-content:space-between;
-    padding:14px 24px;
-    gap:12px;
-    flex-shrink:0;
+    padding:14px 24px; gap:12px; flex-shrink:0;
+    position:relative; z-index:5; pointer-events:none;
   }
+  .topbar-left { display:flex; align-items:center; gap:10px; }
 
-  .logo {
-    display:flex; align-items:baseline; gap:2px;
-    font-family:'Lexend Deca', 'JetBrains Mono', sans-serif;
-    cursor:default;
+  .back-btn {
+    display:none;
+    width:36px; height:36px;
+    border-radius:8px;
+    background:transparent;
+    border:none;
+    color:var(--sub);
+    cursor:pointer;
+    align-items:center; justify-content:center;
+    transition:all .15s;
+    pointer-events:auto;
+    -webkit-appearance:none; appearance:none;
+    padding:0;
   }
-  .logo .logo-icon {
-    font-size:20px; color:var(--main);
-    margin-right:6px; line-height:1;
+  .back-btn.visible { display:flex; }
+  .back-btn:hover, .back-btn:active {
+    background:var(--bg-sub);
+    color:var(--text);
   }
-  .logo .logo-main {
-    font-size:20px; font-weight:700;
-    color:var(--text); line-height:1;
-  }
-  .logo .logo-dot {
-    font-size:20px; font-weight:700;
-    color:var(--main); line-height:1;
-  }
-  .logo .logo-tail {
-    font-size:14px; color:var(--sub);
-    margin-left:4px; line-height:1;
-  }
+  .back-btn svg { width:20px; height:20px; }
 
-  .stats {
-    display:flex; align-items:center; gap:20px;
-    font-family:'Lexend Deca', sans-serif;
-  }
-  .stat {
-    display:flex; flex-direction:column;
-    line-height:1.1; min-width:46px;
-  }
-  .stat .val {
-    font-size:20px; font-weight:400;
-    color:var(--main);
-    font-variant-numeric:tabular-nums;
-  }
-  .stat .lbl {
-    font-size:9px; letter-spacing:1.5px;
-    text-transform:lowercase;
-    color:var(--sub); margin-top:2px;
-  }
+  .logo { display:flex; align-items:baseline; gap:2px; font-family:'Lexend Deca', 'JetBrains Mono', sans-serif; }
+  .logo .logo-icon { font-size:20px; color:var(--main); margin-right:6px; line-height:1; }
+  .logo .logo-main { font-size:20px; font-weight:700; color:var(--text); line-height:1; }
+  .logo .logo-dot { font-size:20px; font-weight:700; color:var(--main); line-height:1; }
+  .logo .logo-tail { font-size:14px; color:var(--sub); margin-left:4px; line-height:1; }
 
-  /* ============ MAIN ============ */
+  .stats { display:flex; align-items:center; gap:20px; font-family:'Lexend Deca', sans-serif; }
+  .stat { display:flex; flex-direction:column; line-height:1.1; min-width:46px; }
+  .stat .val { font-size:20px; font-weight:400; color:var(--main); font-variant-numeric:tabular-nums; }
+  .stat .lbl { font-size:9px; letter-spacing:1.5px; text-transform:lowercase; color:var(--sub); margin-top:2px; }
+
   main {
-    flex:1;
-    display:flex; flex-direction:column;
+    flex:1; display:flex; flex-direction:column;
     justify-content:center; align-items:center;
-    padding:20px 24px;
-    position:relative;
-    overflow:hidden;
+    padding:20px 24px; position:relative; overflow:hidden;
+    z-index:2; pointer-events:none;
   }
-
-  /* ============ SINGLE WORD DISPLAY ============ */
   #wordDisplay {
     font-family:'JetBrains Mono', monospace;
     font-size:clamp(28px, 9vw, 68px);
-    font-weight:500;
-    letter-spacing:1px;
-    line-height:1.25;
-    text-align:center;
-    word-break:break-word;
-    max-width:100%;
-    padding:20px 10px;
-    transition:transform .15s;
-    color:var(--sub);
+    font-weight:500; letter-spacing:1px; line-height:1.25;
+    text-align:center; word-break:break-word;
+    max-width:100%; padding:20px 10px;
+    transition:transform .15s; color:var(--sub);
+    position:relative;
   }
-
   #wordDisplay .letter {
     display:inline-block;
-    position:relative;
     color:var(--sub);
-    transition:color .08s;
+    transition:color .12s;
   }
-  #wordDisplay .letter.correct {
-    color:var(--text);
-  }
+  #wordDisplay .letter.correct { color:var(--text); }
   #wordDisplay .letter.wrong {
     color:var(--error);
-    text-decoration:underline;
-    text-decoration-color:var(--error);
-    text-underline-offset:6px;
-    text-decoration-thickness:3px;
+    text-decoration:underline; text-decoration-color:var(--error);
+    text-underline-offset:6px; text-decoration-thickness:3px;
   }
   #wordDisplay .letter.extra {
     color:var(--error-extra);
-    text-decoration:underline;
-    text-decoration-color:var(--error-extra);
-    text-underline-offset:6px;
-    text-decoration-thickness:3px;
+    text-decoration:underline; text-decoration-color:var(--error-extra);
+    text-underline-offset:6px; text-decoration-thickness:3px;
   }
-
-  /* Caret */
-  #wordDisplay .letter.caret::before {
-    content:'';
-    position:absolute;
-    left:-3px;
-    top:0.05em;
-    width:3px;
-    height:1.05em;
-    background:var(--caret);
-    border-radius:1.5px;
-    animation:caretBlink 1s steps(1) infinite;
+  #wordDisplay .caret-anchor {
+    display:inline-block;
+    width:0; height:1em;
+    vertical-align:baseline;
     pointer-events:none;
   }
-  @keyframes caretBlink {
-    0%, 49% { opacity:1; }
-    50%, 100% { opacity:0.15; }
-  }
 
-  /* Complete flash */
-  #wordDisplay.complete {
-    animation:completePop .4s ease-out;
+  #caret {
+    position:fixed;
+    top:0; left:0;
+    width:3px;
+    height:1em;
+    background:var(--caret);
+    border-radius:1.5px;
+    pointer-events:none;
+    opacity:0;
+    z-index:3;
+    transform:translate(0, 0);
+    will-change:transform,height,opacity;
   }
+  #caret.visible { opacity:1; }
+
+  #wordDisplay.complete { animation:completePop .4s ease-out; }
   @keyframes completePop {
     0%   { transform:scale(1); }
     40%  { transform:scale(1.06); color:var(--main); }
     100% { transform:scale(1); }
   }
-
-  /* Shake */
-  #wordDisplay.shake {
-    animation:shake .3s ease-in-out;
-  }
+  #wordDisplay.shake { animation:shake .3s ease-in-out; }
   @keyframes shake {
     0%,100% { transform:translateX(0); }
     20%,60% { transform:translateX(-8px); }
     40%,80% { transform:translateX(8px); }
   }
 
-  /* ============ PROGRESS BAR ============ */
-  .progress-wrap {
-    width:100%; max-width:600px;
-    padding:0 10px;
-    margin-top:36px;
-  }
-  .progress-bar {
-    width:100%; height:3px;
-    background:var(--bg-sub);
-    border-radius:2px;
-    overflow:hidden;
-  }
-  #progressFill {
-    height:100%; width:0%;
-    background:var(--main);
-    border-radius:2px;
-    transition:width .3s ease;
-  }
+  .progress-wrap { width:100%; max-width:600px; padding:0 10px; margin-top:36px; }
+  .progress-bar { width:100%; height:3px; background:var(--bg-sub); border-radius:2px; overflow:hidden; }
+  #progressFill { height:100%; width:0%; background:var(--main); border-radius:2px; transition:width .3s ease; }
   .progress-label {
-    text-align:center;
-    margin-top:10px;
-    font-size:11px;
-    letter-spacing:2px;
-    color:var(--sub-alt);
-    font-family:'Lexend Deca', sans-serif;
-    text-transform:lowercase;
+    text-align:center; margin-top:10px; font-size:11px;
+    letter-spacing:2px; color:var(--sub-alt);
+    font-family:'Lexend Deca', sans-serif; text-transform:lowercase;
   }
 
-  /* ============ FOOTER ============ */
   .footer {
-    padding:14px 20px 20px;
-    display:flex;
-    justify-content:center;
-    gap:20px;
-    font-family:'Lexend Deca', sans-serif;
-    font-size:11px;
-    color:var(--sub-alt);
-    letter-spacing:.5px;
-    flex-shrink:0;
-    flex-wrap:wrap;
+    padding:14px 20px 20px; display:flex; justify-content:center;
+    gap:20px; font-family:'Lexend Deca', sans-serif;
+    font-size:11px; color:var(--sub-alt); letter-spacing:.5px;
+    flex-shrink:0; flex-wrap:wrap;
+    position:relative; z-index:5; pointer-events:none;
   }
-  .footer .hint {
-    display:flex; align-items:center; gap:6px;
-  }
+  .footer .hint { display:flex; align-items:center; gap:6px; }
   .footer kbd {
     display:inline-flex; align-items:center; justify-content:center;
-    background:var(--bg-sub);
-    color:var(--sub);
+    background:var(--bg-sub); color:var(--sub);
     padding:3px 8px; border-radius:4px;
     font-family:inherit; font-size:10px;
     letter-spacing:1px; min-width:22px;
   }
 
-  /* ============ MENU OVERLAY ============ */
   #menuOverlay {
-    position:absolute; inset:0;
-    background:var(--bg);
-    z-index:50;
-    display:flex; flex-direction:column;
+    position:absolute; inset:0; background:var(--bg);
+    z-index:50; display:flex; flex-direction:column;
     justify-content:center; align-items:center;
-    gap:22px;
-    padding:24px;
-    transition:opacity .2s;
+    gap:22px; padding:24px; transition:opacity .2s;
+    overflow-y:auto;
   }
   #menuOverlay.hidden { display:none; }
-
   #menuOverlay .menu-logo {
     font-family:'Lexend Deca', sans-serif;
-    font-size:38px;
-    font-weight:700;
-    color:var(--text);
-    letter-spacing:1px;
-    display:flex;
-    align-items:baseline;
+    font-size:38px; font-weight:700; color:var(--text);
+    letter-spacing:1px; display:flex; align-items:baseline;
   }
   #menuOverlay .menu-logo .accent { color:var(--main); }
   #menuOverlay .menu-logo .dot { color:var(--main); }
   #menuOverlay .menu-logo .tail {
-    font-size:18px;
-    color:var(--sub);
-    font-family:'JetBrains Mono', monospace;
-    margin-left:8px;
+    font-size:18px; color:var(--sub);
+    font-family:'JetBrains Mono', monospace; margin-left:8px;
   }
-
   #menuOverlay .menu-subtitle {
     font-family:'Lexend Deca', sans-serif;
-    color:var(--sub);
-    font-size:12px;
-    letter-spacing:2px;
-    text-transform:lowercase;
+    color:var(--sub); font-size:12px;
+    letter-spacing:2px; text-transform:lowercase;
     margin-top:-10px;
   }
-
-  .menu-config {
-    display:flex; flex-direction:column;
-    gap:8px;
-    width:100%; max-width:340px;
-    margin-top:8px;
-  }
-
+  .menu-config { display:flex; flex-direction:column; gap:8px; width:100%; max-width:340px; margin-top:8px; }
   .cfg-row {
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    background:var(--bg-sub);
-    border:1px solid transparent;
-    border-radius:8px;
-    padding:14px 18px;
-    cursor:pointer;
-    transition:all .15s;
-    color:var(--text);
-    font-family:inherit;
-    font-size:15px;
-    text-align:left;
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--bg-sub); border:1px solid transparent;
+    border-radius:8px; padding:16px 18px; cursor:pointer;
+    transition:all .15s; color:var(--text);
+    font-family:inherit; font-size:16px; text-align:left;
   }
   .cfg-row:hover, .cfg-row:active {
-    background:var(--bg-sub-alt);
-    border-color:var(--main);
+    background:var(--bg-sub-alt); border-color:var(--main);
   }
   .cfg-row .cfg-name {
     font-family:'Lexend Deca', sans-serif;
-    font-weight:700;
-    letter-spacing:1px;
-    text-transform:lowercase;
+    font-weight:700; letter-spacing:1px; text-transform:lowercase;
   }
-  .cfg-row .cfg-stars {
-    color:var(--main);
-    font-size:14px;
-    letter-spacing:2px;
+  .cfg-row .cfg-stars { color:var(--main); font-size:14px; letter-spacing:2px; }
+
+  .settings-trigger {
+    position:absolute;
+    top:0; right:0;
+    width:90px; height:90px;
+    z-index:55;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
   }
-  .cfg-row .cfg-desc {
-    display:block;
-    font-family:'JetBrains Mono', monospace;
-    font-size:10px;
-    color:var(--sub);
-    font-weight:400;
-    letter-spacing:0;
-    margin-top:3px;
-    text-transform:none;
+  .settings-panel {
+    position:absolute;
+    top:70px; right:16px;
+    background:var(--bg-sub);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:10px;
+    padding:14px 18px 12px;
+    z-index:55;
+    min-width:230px;
+    box-shadow:0 10px 40px rgba(0,0,0,0.55);
+    animation:settingsPop .18s ease-out;
+  }
+  .settings-panel.hidden { display:none; }
+  @keyframes settingsPop {
+    from { opacity:0; transform:translateY(-6px) scale(.97); }
+    to   { opacity:1; transform:translateY(0) scale(1); }
+  }
+  .settings-title {
+    font-family:'Lexend Deca', sans-serif;
+    font-size:10px; color:var(--sub);
+    letter-spacing:1.8px; text-transform:lowercase;
+    margin-bottom:10px;
+  }
+  .settings-row {
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px; cursor:pointer;
+    padding:6px 0;
+    user-select:none; -webkit-user-select:none;
+  }
+  .settings-label {
+    font-family:'Lexend Deca', sans-serif;
+    font-size:14px; color:var(--text);
+    text-transform:lowercase; letter-spacing:0.3px;
+  }
+  .settings-row input[type="checkbox"] {
+    position:absolute;
+    opacity:0;
+    pointer-events:none;
+    width:1px; height:1px;
+  }
+  .settings-checkbox {
+    width:22px; height:22px;
+    border-radius:5px;
+    border:2px solid var(--sub-alt);
+    background:transparent;
+    display:flex; align-items:center; justify-content:center;
+    transition:all .18s;
+    flex-shrink:0;
+  }
+  .settings-checkbox svg {
+    width:13px; height:13px;
+    stroke:var(--bg);
+    stroke-width:3.5;
+    fill:none;
+    opacity:0;
+    transition:opacity .15s;
+  }
+  .settings-row input:checked ~ .settings-checkbox {
+    background:var(--main);
+    border-color:var(--main);
+  }
+  .settings-row input:checked ~ .settings-checkbox svg {
+    opacity:1;
   }
 
-  /* ============ RESULTS ============ */
   #resultsOverlay {
-    position:absolute; inset:0;
-    background:var(--bg);
-    z-index:60;
-    display:flex; flex-direction:column;
+    position:absolute; inset:0; background:var(--bg);
+    z-index:60; display:flex; flex-direction:column;
     justify-content:center; align-items:center;
-    gap:20px;
-    padding:30px 20px;
+    gap:20px; padding:30px 20px;
   }
   #resultsOverlay.hidden { display:none; }
-
   .results-title {
     font-family:'Lexend Deca', sans-serif;
-    font-size:24px;
-    font-weight:400;
-    color:var(--sub);
-    letter-spacing:2px;
-    text-transform:lowercase;
-    margin-bottom:8px;
+    font-size:24px; font-weight:400; color:var(--sub);
+    letter-spacing:2px; text-transform:lowercase; margin-bottom:8px;
   }
-
   .results-grid {
-    display:flex; flex-wrap:wrap;
-    justify-content:center;
-    gap:30px 44px;
-    margin:16px 0;
-    max-width:500px;
+    display:flex; flex-wrap:wrap; justify-content:center;
+    gap:30px 44px; margin:16px 0; max-width:500px;
   }
   .results-item { text-align:center; }
   .results-item .label {
     font-family:'Lexend Deca', sans-serif;
-    color:var(--sub);
-    font-size:12px;
-    letter-spacing:1.5px;
-    text-transform:lowercase;
-    margin-bottom:6px;
+    color:var(--sub); font-size:12px;
+    letter-spacing:1.5px; text-transform:lowercase; margin-bottom:6px;
   }
   .results-item .value {
     font-family:'JetBrains Mono', monospace;
-    color:var(--main);
-    font-size:48px;
-    font-weight:400;
-    line-height:1;
+    color:var(--main); font-size:48px; font-weight:400; line-height:1;
   }
-  .results-item .value.small {
-    font-size:28px;
-  }
-  .results-item .unit {
-    color:var(--sub);
-    font-size:12px;
-    margin-left:3px;
-  }
-
-  .results-buttons {
-    display:flex; gap:12px;
-    margin-top:16px;
-    flex-wrap:wrap;
-    justify-content:center;
-  }
+  .results-item .value.small { font-size:28px; }
+  .results-buttons { display:flex; gap:12px; margin-top:16px; flex-wrap:wrap; justify-content:center; }
   .results-btn {
-    background:transparent;
-    border:1px solid var(--sub-alt);
-    color:var(--sub);
-    padding:11px 24px;
-    border-radius:6px;
-    font-family:inherit;
-    font-size:13px;
-    letter-spacing:1px;
-    cursor:pointer;
-    transition:all .15s;
+    background:transparent; border:1px solid var(--sub-alt);
+    color:var(--sub); padding:11px 24px; border-radius:6px;
+    font-family:inherit; font-size:13px;
+    letter-spacing:1px; cursor:pointer; transition:all .15s;
   }
-  .results-btn:hover, .results-btn:active {
-    border-color:var(--main);
-    color:var(--main);
-  }
-  .results-btn.primary {
-    background:var(--main);
-    color:var(--bg);
-    border-color:var(--main);
-  }
+  .results-btn:hover, .results-btn:active { border-color:var(--main); color:var(--main); }
+  .results-btn.primary { background:var(--main); color:var(--bg); border-color:var(--main); }
   .results-btn.primary:hover { background:#f0c930; }
 
-  /* ============ HIDDEN INPUT ============ */
   #hiddenInput {
-    position:fixed;
-    top:50%; left:50%;
-    width:1px; height:1px;
-    opacity:0.01;
-    border:none; outline:none; background:transparent;
-    color:transparent; caret-color:transparent;
-    font-size:16px;
-    pointer-events:none;
-    z-index:-1;
+    position:absolute; top:0; left:0;
+    width:100%; height:100%;
+    opacity:1; background:transparent;
+    border:none; outline:none;
+    color:transparent; caret-color:transparent; text-shadow:none;
+    font-size:16px; padding:0; margin:0;
+    z-index:1; -webkit-appearance:none; appearance:none;
+    border-radius:0; -webkit-user-select:text; user-select:text;
+    resize:none;
   }
+  #hiddenInput::selection { background:transparent; color:transparent; }
+  #hiddenInput::-moz-selection { background:transparent; color:transparent; }
 
-  /* ============ MOBILE ============ */
   @media (max-width: 700px) {
     .topbar { padding:12px 16px; }
     .logo .logo-icon { font-size:18px; }
@@ -427,16 +342,17 @@
     #wordDisplay { padding:14px 6px; }
     .progress-wrap { margin-top:24px; padding:0; }
     .footer { padding:10px 14px 14px; gap:14px; font-size:10px; }
-    #menuOverlay { gap:18px; padding:20px; }
+    #menuOverlay { gap:16px; padding:20px; }
     #menuOverlay .menu-logo { font-size:30px; }
     #menuOverlay .menu-logo .tail { font-size:14px; }
-    .cfg-row { padding:12px 16px; font-size:14px; }
+    .cfg-row { padding:13px 16px; font-size:15px; }
     .cfg-row .cfg-stars { font-size:12px; letter-spacing:1.5px; }
     .results-grid { gap:22px 32px; }
     .results-item .value { font-size:38px; }
     .results-item .value.small { font-size:22px; }
+    .back-btn { width:34px; height:34px; }
+    .settings-panel { top:64px; right:12px; min-width:200px; }
   }
-
   @media (max-height: 500px) {
     #wordDisplay { padding:8px 6px; }
     .progress-wrap { margin-top:14px; }
@@ -447,13 +363,19 @@
 <body>
 <div id="app">
 
-  <!-- TOP BAR -->
   <header class="topbar">
-    <div class="logo">
-      <span class="logo-icon">⌨</span>
-      <span class="logo-main">typing</span>
-      <span class="logo-dot">.</span>
-      <span class="logo-tail">challenge</span>
+    <div class="topbar-left">
+      <button id="backBtn" class="back-btn" aria-label="Zurück zum Menü">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      <div class="logo">
+        <span class="logo-icon">⌨</span>
+        <span class="logo-main">typing</span>
+        <span class="logo-dot">.</span>
+        <span class="logo-tail">challenge</span>
+      </div>
     </div>
     <div class="stats">
       <div class="stat"><span class="val" id="statWpm">0</span><span class="lbl">wpm</span></div>
@@ -462,7 +384,6 @@
     </div>
   </header>
 
-  <!-- MAIN -->
   <main>
     <div id="wordDisplay"></div>
     <div class="progress-wrap">
@@ -471,14 +392,28 @@
     </div>
   </main>
 
-  <!-- FOOTER -->
   <footer class="footer">
     <div class="hint"><kbd>esc</kbd>quit</div>
     <div class="hint"><kbd>tab</kbd>restart</div>
   </footer>
 
-  <!-- MENU OVERLAY -->
+  <div id="caret"></div>
+
   <div id="menuOverlay">
+    <div id="settingsTrigger" class="settings-trigger" aria-label="Einstellungen"></div>
+    <div id="settingsPanel" class="settings-panel hidden">
+      <div class="settings-title">settings</div>
+      <label class="settings-row">
+        <span class="settings-label">auto correct</span>
+        <input type="checkbox" id="autoCorrectCheckbox">
+        <span class="settings-checkbox">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </span>
+      </label>
+    </div>
+
     <div class="menu-logo">
       <span>typing</span><span class="dot">.</span><span class="accent">challenge</span>
       <span class="tail">/deutsch</span>
@@ -486,56 +421,35 @@
     <div class="menu-subtitle">wähle eine schwierigkeit</div>
     <div class="menu-config">
       <button class="cfg-row" data-diff="einfach">
-        <span>
-          <span class="cfg-name">einfach</span>
-          <span class="cfg-desc">kurze, häufige wörter</span>
-        </span>
+        <span class="cfg-name">einfach</span>
         <span class="cfg-stars">★</span>
       </button>
       <button class="cfg-row" data-diff="mittel">
-        <span>
-          <span class="cfg-name">mittel</span>
-          <span class="cfg-desc">längere alltagswörter</span>
-        </span>
+        <span class="cfg-name">mittel</span>
         <span class="cfg-stars">★★</span>
       </button>
       <button class="cfg-row" data-diff="schwer">
-        <span>
-          <span class="cfg-name">schwer</span>
-          <span class="cfg-desc">komplexe begriffe</span>
-        </span>
+        <span class="cfg-name">schwer</span>
         <span class="cfg-stars">★★★</span>
       </button>
       <button class="cfg-row" data-diff="unmöglich">
-        <span>
-          <span class="cfg-name">unmöglich</span>
-          <span class="cfg-desc">bürokratie-monster</span>
-        </span>
+        <span class="cfg-name">unmöglich</span>
         <span class="cfg-stars">★★★★</span>
+      </button>
+      <button class="cfg-row" data-diff="sehr_einfach">
+        <span class="cfg-name">sehr einfach</span>
+        <span class="cfg-stars">★★★★★</span>
       </button>
     </div>
   </div>
 
-  <!-- RESULTS OVERLAY -->
   <div id="resultsOverlay" class="hidden">
     <div class="results-title">session complete</div>
     <div class="results-grid">
-      <div class="results-item">
-        <div class="label">wpm</div>
-        <div class="value" id="resWpm">0</div>
-      </div>
-      <div class="results-item">
-        <div class="label">accuracy</div>
-        <div class="value" id="resAcc">100%</div>
-      </div>
-      <div class="results-item">
-        <div class="label">chars</div>
-        <div class="value small" id="resChars">0</div>
-      </div>
-      <div class="results-item">
-        <div class="label">time</div>
-        <div class="value small" id="resTime">0s</div>
-      </div>
+      <div class="results-item"><div class="label">wpm</div><div class="value" id="resWpm">0</div></div>
+      <div class="results-item"><div class="label">accuracy</div><div class="value" id="resAcc">100%</div></div>
+      <div class="results-item"><div class="label">chars</div><div class="value small" id="resChars">0</div></div>
+      <div class="results-item"><div class="label">time</div><div class="value small" id="resTime">0s</div></div>
     </div>
     <div class="results-buttons">
       <button class="results-btn" id="resRestart">restart</button>
@@ -543,29 +457,23 @@
     </div>
   </div>
 
-  <input type="text" id="hiddenInput" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="text">
+  <input type="text" id="hiddenInput"
+         autocomplete="off" autocorrect="off" autocapitalize="none"
+         spellcheck="false" enterkeyhint="done">
 </div>
 
 <script>
 (() => {
 'use strict';
 
-// ============================================================
-//  WORT-LISTEN
-// ============================================================
 const WORDS = {
   einfach: `Haus Baum Hund Katze Ball Buch Tisch Stuhl Tür Wand Bett Auto Zug Bus Schiff Sonne Mond Stern Himmel Wolke Regen Schnee Wind Wasser Feuer Erde Sand Stein Berg Tal Fluss Meer See Wald Wiese Feld Garten Blume Rose Tulpe Gras Blatt Ast Wurzel Apfel Birne Banane Kirsche Traube Beere Brot Käse Milch Butter Ei Fleisch Fisch Reis Nudel Suppe Salat Kuchen Torte Keks Zucker Salz Pfeffer Honig Kaffee Tee Saft Bier Wein Glas Tasse Teller Löffel Gabel Messer Topf Pfanne Herd Schrank Regal Sofa Sessel Teppich Lampe Kerze Bild Uhr Spiegel Kamm Bürste Seife Handtuch Hemd Hose Rock Kleid Jacke Mantel Schuh Stiefel Socke Mütze Hut Schal Handschuh Gürtel Tasche Koffer Schlüssel Geld Münze Schein Karte Brief Paket Zeitung Heft Stift Bleistift Kuli Lineal Schere Kleber Papier Ordner Mappe Computer Laptop Handy Telefon Radio Kamera Foto Film Musik Lied Tanz Spiel Sport Fußball Tennis Schwimmen Laufen Springen Klettern Radfahren Reiten Wandern Kochen Backen Malen Lesen Schreiben Rechnen Lernen Spielen Schlafen Essen Trinken Gehen Kommen Sehen Hören Sprechen Denken Fühlen Lachen Weinen Singen Tanzen Kind Baby Mann Frau Junge Mädchen Vater Mutter Bruder Schwester Oma Opa Onkel Tante Freund Nachbar Lehrer Arzt Polizist Feuerwehr Bein Arm Hand Kopf Auge Ohr Nase Mund Zahn Zunge Hals Schulter Rücken Bauch Knie Fuß Zeh Haar Haut Blut Knochen Herz Lunge Leber Magen Darm Gehirn Nerv Muskel`.split(/\s+/).filter(Boolean),
-
   mittel: `Computer Fernseher Telefon Bibliothek Krankenhaus Flughafen Bahnhof Restaurant Supermarkt Apotheke Bäckerei Metzgerei Friseur Schule Universität Kindergarten Spielplatz Schwimmbad Stadion Kino Theater Museum Kirche Rathaus Brücke Tunnel Straße Autobahn Fahrrad Motorrad Lastwagen Traktor Hubschrauber Rakete Satellit Planet Galaxie Universum Wissenschaft Forschung Experiment Labor Chemie Physik Biologie Mathematik Geschichte Geographie Sprache Grammatik Vokabel Wörterbuch Übersetzung Erzählung Gedicht Roman Krimi Komödie Tragödie Schauspieler Regisseur Mikrofon Lautsprecher Kopfhörer Bildschirm Tastatur Drucker Scanner Internet Website Programm Software Hardware Datenbank Server Netzwerk Passwort Sicherheit Virenschutz Update Download Upload Nachricht Anruf Gespräch Diskussion Meinung Argument Beweis Frage Antwort Problem Lösung Idee Plan Projekt Ziel Erfolg Fehler Versuch Ergebnis Erfahrung Wissen Bildung Ausbildung Studium Prüfung Zeugnis Klasse Kurs Seminar Vorlesung Professor Student Schüler Hausaufgabe Pause Ferien Urlaub Reise Ausflug Wanderung Abenteuer Erlebnis Erinnerung Gefühl Emotion Freude Trauer Angst Mut Hoffnung Liebe Freundschaft Familie Verwandte Gesellschaft Gemeinschaft Kultur Tradition Religion Politik Wirtschaft Industrie Handwerk Landwirtschaft Technik Erfindung Entdeckung Fortschritt Zukunft Vergangenheit Gegenwart Augenblick Moment Sekunde Minute Stunde Woche Monat Jahr Jahrzehnt Jahrhundert Jahrtausend Zeitraum Kalender Datum Geburtstag Feiertag Wochenende Montag Dienstag Mittwoch Donnerstag Freitag Samstag Sonntag Januar Februar März April Juni Juli August September Oktober November Dezember Frühling Sommer Herbst Winter Morgen Mittag Abend Nacht Sonnenaufgang Sonnenuntergang Mondlicht Sternenhimmel Regenbogen Gewitter Blitz Donner Sturm Orkan Tornado Erdbeben Überschwemmung Dürre Hitze Kälte Frost Eis Schneefall Nebel Dunst Tau Reif`.split(/\s+/).filter(Boolean),
-
   schwer: `Wahrscheinlichkeit Geschwindigkeit Verantwortung Zusammenarbeit Kommunikation Information Organisation Konzentration Motivation Kreativität Flexibilität Professionalität Persönlichkeit Eigenschaft Fähigkeit Fertigkeit Kenntnisse Erfahrungen Erkenntnisse Wissenschaftler Forscher Entdecker Erfinder Ingenieur Architekt Journalist Fotograf Musiker Komponist Dirigent Schriftsteller Dichter Maler Bildhauer Designer Programmierer Entwickler Administrator Assistent Manager Direktor Präsident Kanzler Minister Abgeordneter Bürgermeister Polizistin Feuerwehrfrau Krankenschwester Apotheker Zahnarzt Tierarzt Anwalt Richter Notar Steuerberater Buchhalter Verkäufer Kellner Bäcker Metzger Friseur Gärtner Landwirt Handwerker Tischler Schreiner Maurer Dachdecker Elektriker Installateur Mechaniker Schlosser Schweißer Bauingenieur Maschinenbau Elektrotechnik Mechatronik Informatik Pharmazie Psychologie Soziologie Philosophie Theologie Pädagogik Didaktik Methodik Rhetorik Orthografie Interpunktion Silbentrennung Großschreibung Kleinschreibung Rechtschreibung Zeichensetzung Inhaltsangabe Interpretation Charakterisierung Erörterung Stellungnahme Zusammenfassung Beschreibung Berichterstattung Dokumentation Präsentation Moderation Debatte Argumentation Widerlegung Begründung Schlussfolgerung Voraussetzung Bedingung Konsequenz Kausalität Statistik Analyse Synthese Hypothese Theorie Praxis Methode Strategie Taktik Konzept Struktur System Prozess Verfahren Technologie Innovation Revolution Evolution Transformation Modifikation Variation Kombination Integration Migration Immigration Emigration Population Generation Situation Position Funktion Reaktion Aktion Interaktion Kooperation Kollaboration Konfrontation Konflikt Kompromiss Konsens Dissens Diskurs Dialog Monolog Prolog Epilog Katalog Analogie Anomalie Symmetrie Asymmetrie Hierarchie Monarchie Demokratie Aristokratie Bürokratie Autokratie Theokratie Anarchie Oligarchie Plutokratie Meritokratie Technokratie Atmosphäre Stratosphäre Ionosphäre Biosphäre Ökosphäre Hydrosphäre Lithosphäre`.split(/\s+/).filter(Boolean),
-
   unmöglich: `Hilfeleistungslöschgruppenfahrzeug Rindfleischetikettierungsüberwachungsaufgabenübertragungsgesetz Lebensmittelverschwendungsverordnung Datenschutzgrundverordnung Bundesdatenschutzbeauftragter Rechtsschutzversicherungsgesellschaft Bundesausbildungsförderungsgesetz Kraftfahrzeughaftpflichtversicherung Arbeiterunfallversicherungsgesetz Grundstücksverkehrsgenehmigungszuständigkeitsübertragungsverordnung Donaudampfschifffahrtsgesellschaftskapitän Donaudampfschifffahrtsgesellschaftskapitänswitwe Donaudampfschifffahrtsgesellschaftskapitänskajüte Oberammergauerpassionsspiel Binnenlandsschifffahrtsstraßenordnung Verkehrsinfrastrukturfinanzierungsgesellschaft Straßenverkehrsordnungswidrigkeit Straßenverkehrszulassungsordnung Betriebsverfassungsgesetz Handelsgesetzbuch Bürgerlichesgesetzbuch Strafgesetzbuch Sozialgesetzbuch Baugesetzbuch Steuerberatungsgesetz Wirtschaftsprüferordnung Versicherungsvertragsgesetz Kraftfahrzeugsteuergesetz Personenbeförderungsgesetz Güterkraftverkehrsgesetz Telekommunikationsgesetz Energiewirtschaftsgesetz Kreislaufwirtschaftsgesetz Wasserhaushaltsgesetz Bundesimmissionsschutzgesetz Bundesnaturschutzgesetz Tierschutzgesetz Lebensmittelhygieneverordnung Trinkwasserverordnung Gefahrstoffverordnung Betriebssicherheitsverordnung Arbeitsstättenverordnung Arbeitszeitgesetz Bundesurlaubsgesetz Entgeltfortzahlungsgesetz Kündigungsschutzgesetz Betriebsrentengesetz Pflegezeitgesetz Familienpflegezeitgesetz Elterngeldgesetz Mutterschutzgesetz Jugendarbeitsschutzgesetz Schwerbehindertengesetz Behindertengleichstellungsgesetz Antidiskriminierungsgesetz Teilzeitbefristungsgesetz Arbeitnehmerüberlassungsgesetz Mindestlohngesetz Tarifautonomiestärkungsgesetz Rentenversicherungsnachhaltigkeitsgesetz Alterssicherungsgesetz Betriebsrentenstärkungsgesetz Pflegestärkungsgesetz Krankenhausstrukturgesetz Versorgungsstrukturgesetz Arzneimittelversorgungsgesetz Infektionsschutzgesetz Masernschutzgesetz Impfschutzgesetz Bevölkerungsschutzgesetz Katastrophenschutzgesetz Zivilschutzgesetz Wehrpflichtgesetz Soldatengesetz Beamtenstatusgesetz Bundesbeamtengesetz Richtergesetz Notarstandsgesetz Rechtsanwaltsordnung Patentanwaltsordnung Steuerberatungsordnung Handwerksordnung Gewerbeordnung Aktiengesetz Genossenschaftsgesetz Umwandlungsgesetz Insolvenzordnung Zivilprozessordnung Strafprozessordnung Verwaltungsgerichtsordnung Finanzgerichtsordnung Sozialgerichtsgesetz Arbeitsgerichtsgesetz Verwaltungsverfahrensgesetz Verwaltungszustellungsgesetz Verwaltungsvollstreckungsgesetz Informationsfreiheitsgesetz Umweltinformationsgesetz Verbraucherinformationsgesetz Wirtschaftsstabilisierungsfondsgesetz Finanzmarktstabilisierungsgesetz Einlagensicherungsgesetz Kreditwesengesetz Wertpapierhandelsgesetz Börsengesetz Kapitalanlagegesetzbuch Versicherungsaufsichtsgesetz Zahlungsdiensteaufsichtsgesetz Fahrzeugidentifikationsnummer Verkehrszeichenerkennungssystem Fahrerassistenzsystem Programmierschnittstelle Datenbankmanagementsystem Computersystemadministrator Verschlüsselungstechnik Kryptographietechnik Drehleiterfahrzeug Rüstwagen Gerätewagen Mannschaftstransportfahrzeug Einsatzleitwagen Kommandowagen Hubrettungsfahrzeug Tanklöschfahrzeug Löschgruppenfahrzeug Personenkraftwagen Nutzfahrzeugindustrie Maschinenbauingenieurwesen Elektrotechnikstudium Informationstechnologie Telekommunikationsunternehmen Energieversorgungsunternehmen Versorgungsnetzbetreiber Bauleitplanungsverfahren Baugenehmigungsverfahren Grundbuchamt Katasteramt Wasseraufbereitungsanlage Abwasserentsorgungsbetrieb Müllverbrennungsanlage Recyclingwirtschaft Kreislaufwirtschaft Entsorgungswirtschaft Verpackungsverordnung Elektroschrottverordnung Batterieverordnung Altfahrzeugverordnung Chemikalienverordnung Pflanzenschutzmittelverordnung Düngemittelverordnung Futtermittelverordnung Tierarzneimittelverordnung Tierimpfstoffverordnung Arzneimittelzulassungsverordnung Medizinprodukteverordnung Krankenhausentlassungsmanagement Notaufnahmestation Facharztausbildung Approbationsordnung Heilmittelverordnung Pharmakovigilanzsystem Qualitätssicherungsmaßnahme Risikomanagementsystem Sicherheitsbeauftragter Datenschutzbeauftragter Gleichstellungsbeauftragter Behindertenbeauftragter Tierschutzbeauftragter Umweltschutzbeauftragter Bundesrechnungshof Landesrechnungshof Rechnungshofbericht Rechnungsprüfungsamt Prüfungsausschuss Hauptversammlung Aufsichtsrat Vorstandsvorsitzender Geschäftsführerbetriebsrat Personalvertretungsgesetz Bundespersonalvertretungsgesetz Landespersonalvertretungsgesetz Mitbestimmungsgesetz Betriebsverfassungsnovelle Unternehmensmitbestimmung Qualitätsmanagement Umweltmanagement Energiemanagement Sicherheitsmanagement Wissensmanagement Changemanagement Projektmanagement Prozessoptimierung Geschäftsprozessoptimierung Effizienzsteigerung Produktivitätssteigerung Wettbewerbsfähigkeit Zukunftsfähigkeit Nachhaltigkeitsstrategie Digitalisierungsstrategie Innovationsstrategie Wachstumsstrategie Vertriebsstrategie Marketingstrategie Kommunikationsstrategie Unternehmensstrategie`.split(/\s+/).filter(Boolean),
+  sehr_einfach: `Hilfeleistungslöschgruppenfahrzeug Rindfleischetikettierungsüberwachungsaufgabenübertragungsgesetz Grundstücksverkehrsgenehmigungszuständigkeitsübertragungsverordnung Donaudampfschifffahrtsgesellschaftskapitän Donaudampfschifffahrtsgesellschaftskapitänswitwe Donaudampfschifffahrtsgesellschaftskapitänskajüte Donaudampfschifffahrtsgesellschaftskapitänsmütze Donaudampfschifffahrtsgesellschaftskapitänsuniform Kraftfahrzeughaftpflichtversicherung Arbeiterunfallversicherungsgesetz Bundesausbildungsförderungsgesetz Lebensmittelverschwendungsverordnung Bundesdatenschutzbeauftragter Rechtsschutzversicherungsgesellschaft Verkehrsinfrastrukturfinanzierungsgesellschaft Straßenverkehrsordnungswidrigkeit Straßenverkehrszulassungsordnung Binnenlandsschifffahrtsstraßenordnung Betriebsverfassungsgesetz Wirtschaftsprüferordnung Versicherungsvertragsgesetz Kraftfahrzeugsteuergesetz Personenbeförderungsgesetz Telekommunikationsgesetz Energiewirtschaftsgesetz Kreislaufwirtschaftsgesetz Bundesimmissionsschutzgesetz Lebensmittelhygieneverordnung Betriebssicherheitsverordnung Entgeltfortzahlungsgesetz Jugendarbeitsschutzgesetz Behindertengleichstellungsgesetz Antidiskriminierungsgesetz Teilzeitbefristungsgesetz Arbeitnehmerüberlassungsgesetz Tarifautonomiestärkungsgesetz Rentenversicherungsnachhaltigkeitsgesetz Betriebsrentenstärkungsgesetz Krankenhausstrukturgesetz Arzneimittelversorgungsgesetz Bevölkerungsschutzgesetz Katastrophenschutzgesetz Verwaltungsgerichtsordnung Verwaltungsverfahrensgesetz Verwaltungszustellungsgesetz Verwaltungsvollstreckungsgesetz Informationsfreiheitsgesetz Umweltinformationsgesetz Verbraucherinformationsgesetz Wirtschaftsstabilisierungsfondsgesetz Finanzmarktstabilisierungsgesetz Einlagensicherungsgesetz Versicherungsaufsichtsgesetz Zahlungsdiensteaufsichtsgesetz Fahrzeugidentifikationsnummer Verkehrszeichenerkennungssystem Programmierschnittstelle Datenbankmanagementsystem Computersystemadministrator Mannschaftstransportfahrzeug Maschinenbauingenieurwesen Telekommunikationsunternehmen Energieversorgungsunternehmen Wasseraufbereitungsanlage Abwasserentsorgungsbetrieb Pflanzenschutzmittelverordnung Tierarzneimittelverordnung Arzneimittelzulassungsverordnung Medizinprodukteverordnung Krankenhausentlassungsmanagement Qualitätssicherungsmaßnahme Risikomanagementsystem Gleichstellungsbeauftragter Umweltschutzbeauftragter Geschäftsführerbetriebsrat Personalvertretungsgesetz Bundespersonalvertretungsgesetz Landespersonalvertretungsgesetz Betriebsverfassungsnovelle Unternehmensmitbestimmung Geschäftsprozessoptimierung Produktivitätssteigerung Nachhaltigkeitsstrategie Digitalisierungsstrategie Kommunikationsstrategie Umweltverträglichkeitsprüfung Umweltschutzorganisation Nachhaltigkeitsbericht Nachhaltigkeitskonzept Energieversorgungssicherheit Energieeinsparverordnung Strahlenschutzverordnung Strahlenschutzbeauftragter Atomkraftwerksbetreiber Atomkraftwerkssicherheit Reaktorsicherheitskommission Sicherheitsüberprüfungsgesetz Kriegsverbrechertribunal Menschenrechtsorganisation Menschenrechtsbeauftragter Oberverwaltungsgerichtshof Bundesverwaltungsgericht Sicherheitsüberprüfung Verwaltungsdigitalisierung Aufmerksamkeitsdefizitsyndrom Aufmerksamkeitsdefizithyperaktivitätssyndrom Fußballweltmeisterschaftsqualifikationsspiel Mehrzweckkampfflugzeug Hochleistungsrechnerarchitektur Höchstgeschwindigkeitsbegrenzung Geschwindigkeitsüberschreitung Geschwindigkeitsbeschränkung Geschwindigkeitsbegrenzung Reaktionsgeschwindigkeit Verhaltensauffälligkeiten Notfallsanitätergesetz Rettungsdienstgesetz Lawinenverschüttetensuchgerät Katastrophenschutzbehörde Dienstreisekostenabrechnung Betriebshaftpflichtversicherung Privathaftpflichtversicherung Elementarschadenversicherung Wohngebäudeversicherung Nahrungsergänzungsmittelverordnung Nahrungsmittelunverträglichkeit Verfassungsgerichtshofentscheidung Ministerpräsidentenkonferenz Generalstaatsanwaltschaft Bundesverfassungsgericht Verfassungsbeschwerde Menschenrechtsverletzung Kinderrechtskonvention Klimaschutzvereinbarung Klimarahmenkonvention`.split(/\s+/).filter(Boolean),
 };
 
-// ============================================================
-//  DIVERSITY-SHUFFLE
-// ============================================================
 function shuffle(arr) {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
@@ -574,7 +482,6 @@ function shuffle(arr) {
   }
   return a;
 }
-
 function buildSessionPool(allWords) {
   const groups = new Map();
   for (const w of allWords) {
@@ -597,18 +504,26 @@ function buildSessionPool(allWords) {
   return result;
 }
 
-// ============================================================
-//  STATE
-// ============================================================
 const SESSION_LENGTH = 25;
+
+const settings = {
+  autoCorrect: false
+};
+
+try {
+  const stored = localStorage.getItem('typingchallenge-settings');
+  if (stored) {
+    const parsed = JSON.parse(stored);
+    if (typeof parsed.autoCorrect === 'boolean') settings.autoCorrect = parsed.autoCorrect;
+  }
+} catch (e) {}
 
 const state = {
   difficulty: 'einfach',
   wordPool: [],
   currentIndex: 0,
   currentWord: '',
-  input: '',
-  lastInputLength: 0,
+  lastValue: '',
   wordsCompleted: 0,
   correctChars: 0,
   wrongChars: 0,
@@ -619,10 +534,15 @@ const state = {
   shakeTimeout: null,
 };
 
-// ============================================================
-//  DOM
-// ============================================================
+const caret = {
+  x: 0, y: 0, h: 16,
+  targetX: 0, targetY: 0, targetH: 16,
+  ready: false,
+  visible: false,
+};
+
 const wordDisplayEl = document.getElementById('wordDisplay');
+const caretEl = document.getElementById('caret');
 const hiddenInput = document.getElementById('hiddenInput');
 const menuOverlay = document.getElementById('menuOverlay');
 const resultsOverlay = document.getElementById('resultsOverlay');
@@ -637,34 +557,79 @@ const resChars = document.getElementById('resChars');
 const resTime = document.getElementById('resTime');
 const resRestart = document.getElementById('resRestart');
 const resMenu = document.getElementById('resMenu');
+const backBtn = document.getElementById('backBtn');
+const settingsTrigger = document.getElementById('settingsTrigger');
+const settingsPanel = document.getElementById('settingsPanel');
+const autoCorrectCheckbox = document.getElementById('autoCorrectCheckbox');
 
-// ============================================================
-//  HELPERS
-// ============================================================
+autoCorrectCheckbox.checked = settings.autoCorrect;
+
+let settingsOpen = false;
+
+function openSettings() {
+  settingsOpen = true;
+  settingsPanel.classList.remove('hidden');
+}
+function closeSettings() {
+  settingsOpen = false;
+  settingsPanel.classList.add('hidden');
+}
+
+settingsTrigger.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (settingsOpen) closeSettings();
+  else openSettings();
+});
+
+document.addEventListener('pointerdown', (e) => {
+  if (!settingsOpen) return;
+  if (settingsTrigger.contains(e.target)) return;
+  if (settingsPanel.contains(e.target)) return;
+  closeSettings();
+});
+
+autoCorrectCheckbox.addEventListener('change', () => {
+  settings.autoCorrect = autoCorrectCheckbox.checked;
+  try {
+    localStorage.setItem('typingchallenge-settings', JSON.stringify(settings));
+  } catch (e) {}
+});
+
 function escapeHtml(c) {
   if (c === '&') return '&amp;';
   if (c === '<') return '&lt;';
   if (c === '>') return '&gt;';
   return c;
 }
-
 function formatTime(sec) {
   const s = Math.floor(sec);
   const m = Math.floor(s / 60);
   const r = s % 60;
   return m + ':' + String(r).padStart(2, '0');
 }
+function openKeyboard() {
+  try {
+    hiddenInput.focus();
+    const len = hiddenInput.value.length;
+    if (hiddenInput.setSelectionRange) hiddenInput.setSelectionRange(len, len);
+  } catch (e) {}
+}
+function setInputValue(val) {
+  hiddenInput.value = val;
+  try {
+    const len = val.length;
+    hiddenInput.setSelectionRange(len, len);
+  } catch (e) {}
+}
 
-// ============================================================
-//  START
-// ============================================================
 function startGame(difficulty) {
+  closeSettings();
+
   state.difficulty = difficulty;
   state.wordPool = buildSessionPool(WORDS[difficulty]);
   state.currentIndex = 0;
   state.currentWord = state.wordPool[0];
-  state.input = '';
-  state.lastInputLength = 0;
+  state.lastValue = '';
   state.wordsCompleted = 0;
   state.correctChars = 0;
   state.wrongChars = 0;
@@ -676,49 +641,45 @@ function startGame(difficulty) {
   hiddenInput.value = '';
   menuOverlay.classList.add('hidden');
   resultsOverlay.classList.add('hidden');
+  backBtn.classList.add('visible');
+
+  caret.ready = false;
+  caret.visible = false;
+  caretEl.classList.remove('visible');
 
   renderWord();
   updateStats();
   updateProgress();
-  focusInput();
+  openKeyboard();
 }
 
-function focusInput() {
-  setTimeout(() => {
-    try { hiddenInput.focus({ preventScroll: true }); } catch(e) { hiddenInput.focus(); }
-  }, 30);
-}
-
-// ============================================================
-//  RENDER
-// ============================================================
 function renderWord() {
   const target = state.currentWord;
-  const input = state.input;
+  const input = hiddenInput.value;
+  const caretPos = input.length;
+  const totalLen = Math.max(target.length, input.length);
   let html = '';
+  let anchorInserted = false;
 
-  for (let i = 0; i < target.length; i++) {
-    let cls = 'letter';
-    if (i < input.length) {
-      if (input[i].toLowerCase() === target[i].toLowerCase()) {
-        cls += ' correct';
-      } else {
-        cls += ' wrong';
-      }
-    } else if (i === input.length) {
-      cls += ' caret';
+  for (let i = 0; i < totalLen; i++) {
+    if (i === caretPos) {
+      html += '<span class="caret-anchor"></span>';
+      anchorInserted = true;
     }
-    html += '<span class="' + cls + '">' + escapeHtml(target[i]) + '</span>';
+
+    if (i < target.length) {
+      let cls = 'letter';
+      if (i < input.length) {
+        cls += input[i].toLowerCase() === target[i].toLowerCase() ? ' correct' : ' wrong';
+      }
+      html += '<span class="' + cls + '">' + escapeHtml(target[i]) + '</span>';
+    } else {
+      html += '<span class="letter extra">' + escapeHtml(input[i]) + '</span>';
+    }
   }
 
-  // extra chars beyond word length
-  for (let i = target.length; i < input.length; i++) {
-    html += '<span class="letter extra">' + escapeHtml(input[i]) + '</span>';
-  }
-
-  // caret at end when input has reached end of word
-  if (input.length >= target.length) {
-    html += '<span class="letter caret" style="width:0">&nbsp;</span>';
+  if (!anchorInserted) {
+    html += '<span class="caret-anchor"></span>';
   }
 
   wordDisplayEl.innerHTML = html;
@@ -730,28 +691,82 @@ function updateProgress() {
   progressLabel.textContent = Math.min(state.wordsCompleted + 1, SESSION_LENGTH) + ' / ' + SESSION_LENGTH;
 }
 
-// ============================================================
-//  STATS
-// ============================================================
 function updateStats() {
   const total = state.correctChars + state.wrongChars;
   const acc = total === 0 ? 100 : Math.round((state.correctChars / total) * 100);
   const minutes = state.elapsed / 60;
   const wpm = minutes > 0.01 ? Math.round((state.correctChars / 5) / minutes) : 0;
-
   statWpm.textContent = wpm;
   statAcc.textContent = acc + '%';
   statTime.textContent = formatTime(state.elapsed);
 }
-
 function updateElapsed() {
   if (!state.playing || state.sessionComplete) return;
   state.elapsed = (performance.now() - state.startTime) / 1000;
 }
 
-// ============================================================
-//  WORD COMPLETE
-// ============================================================
+function updateCharCounts(oldVal, newVal, target) {
+  let common = 0;
+  const minLen = Math.min(oldVal.length, newVal.length);
+  while (common < minLen && oldVal[common] === newVal[common]) common++;
+
+  for (let i = common; i < oldVal.length; i++) {
+    if (i < target.length && oldVal[i].toLowerCase() === target[i].toLowerCase()) {
+      state.correctChars = Math.max(0, state.correctChars - 1);
+    } else {
+      state.wrongChars = Math.max(0, state.wrongChars - 1);
+    }
+  }
+  for (let i = common; i < newVal.length; i++) {
+    if (i < target.length && newVal[i].toLowerCase() === target[i].toLowerCase()) {
+      state.correctChars++;
+    } else {
+      state.wrongChars++;
+    }
+  }
+}
+
+function syncInput() {
+  if (state.sessionComplete || !state.playing) return;
+
+  let newVal = hiddenInput.value;
+
+  if (settings.autoCorrect) {
+    const target = state.currentWord;
+    const len = Math.min(newVal.length, target.length);
+    const corrected = target.substring(0, len);
+    if (newVal !== corrected) {
+      newVal = corrected;
+      setInputValue(corrected);
+    }
+  }
+
+  const oldVal = state.lastValue;
+  if (newVal === oldVal) return;
+
+  const target = state.currentWord;
+  updateCharCounts(oldVal, newVal, target);
+  state.lastValue = newVal;
+
+  if (newVal.toLowerCase() === target.toLowerCase()) {
+    renderWord();
+    onWordComplete();
+    return;
+  }
+
+  if (!settings.autoCorrect && newVal.length > oldVal.length && newVal.length > 0) {
+    const lastIdx = newVal.length - 1;
+    if (lastIdx < target.length && newVal[lastIdx].toLowerCase() !== target[lastIdx].toLowerCase()) {
+      if (state.shakeTimeout) clearTimeout(state.shakeTimeout);
+      wordDisplayEl.classList.add('shake');
+      state.shakeTimeout = setTimeout(() => wordDisplayEl.classList.remove('shake'), 320);
+    }
+  }
+
+  renderWord();
+  updateStats();
+}
+
 function onWordComplete() {
   state.wordsCompleted++;
 
@@ -771,9 +786,10 @@ function onWordComplete() {
     state.wordPool = state.wordPool.concat(buildSessionPool(WORDS[state.difficulty]));
   }
   state.currentWord = state.wordPool[state.currentIndex];
-  state.input = '';
-  state.lastInputLength = 0;
   hiddenInput.value = '';
+  state.lastValue = '';
+
+  caret.ready = false;
 
   setTimeout(() => {
     wordDisplayEl.classList.remove('complete');
@@ -797,61 +813,18 @@ function endGame() {
                        '<span style="color:#ca4754">' + state.wrongChars + '</span>';
   resTime.textContent = formatTime(state.elapsed);
 
+  backBtn.classList.remove('visible');
+  caretEl.classList.remove('visible');
+  caret.visible = false;
+
   resultsOverlay.classList.remove('hidden');
   hiddenInput.blur();
 }
 
-// ============================================================
-//  INPUT
-// ============================================================
-hiddenInput.addEventListener('input', (e) => {
-  if (state.sessionComplete || !state.playing) return;
-
-  const val = e.target.value;
-  const target = state.currentWord;
-
-  // Char-Zählung
-  if (val.length > state.lastInputLength) {
-    for (let i = state.lastInputLength; i < val.length; i++) {
-      if (i < target.length && val[i].toLowerCase() === target[i].toLowerCase()) {
-        state.correctChars++;
-      } else {
-        state.wrongChars++;
-      }
-    }
-  } else if (val.length < state.lastInputLength) {
-    for (let i = val.length; i < state.lastInputLength; i++) {
-      if (i < target.length && val[i].toLowerCase() === target[i].toLowerCase()) {
-        state.correctChars = Math.max(0, state.correctChars - 1);
-      } else {
-        state.wrongChars = Math.max(0, state.wrongChars - 1);
-      }
-    }
-  }
-
-  // shake on newly typed wrong char
-  if (val.length > state.lastInputLength) {
-    const lastIdx = val.length - 1;
-    if (lastIdx < target.length && val[lastIdx].toLowerCase() !== target[lastIdx].toLowerCase()) {
-      if (state.shakeTimeout) clearTimeout(state.shakeTimeout);
-      wordDisplayEl.classList.add('shake');
-      state.shakeTimeout = setTimeout(() => wordDisplayEl.classList.remove('shake'), 320);
-    }
-  }
-
-  state.lastInputLength = val.length;
-  state.input = val;
-
-  // Wort komplett?
-  if (val.toLowerCase() === target.toLowerCase()) {
-    renderWord();
-    onWordComplete();
-    return;
-  }
-
-  renderWord();
-  updateStats();
-});
+hiddenInput.addEventListener('input', syncInput);
+hiddenInput.addEventListener('keyup', syncInput);
+hiddenInput.addEventListener('change', syncInput);
+hiddenInput.addEventListener('compositionend', syncInput);
 
 hiddenInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') e.preventDefault();
@@ -865,82 +838,121 @@ hiddenInput.addEventListener('keydown', (e) => {
   }
 });
 
-// ============================================================
-//  FLOW
-// ============================================================
-function restart() {
-  startGame(state.difficulty);
+let lastFrameTs = 0;
+
+function mainLoop(ts) {
+  const dt = lastFrameTs ? Math.min((ts - lastFrameTs) / 1000, 0.05) : 0.016;
+  lastFrameTs = ts;
+
+  if (state.playing && !state.sessionComplete) {
+    if (hiddenInput.value !== state.lastValue) {
+      syncInput();
+    }
+    updateCaret(dt);
+  } else {
+    if (caret.visible) {
+      caretEl.classList.remove('visible');
+      caret.visible = false;
+    }
+  }
+
+  requestAnimationFrame(mainLoop);
 }
+requestAnimationFrame(mainLoop);
+
+function updateCaret(dt) {
+  const anchor = wordDisplayEl.querySelector('.caret-anchor');
+  if (!anchor) {
+    if (caret.visible) {
+      caretEl.classList.remove('visible');
+      caret.visible = false;
+    }
+    return;
+  }
+
+  const rect = anchor.getBoundingClientRect();
+  let h = rect.height;
+  if (h < 5) {
+    const fs = parseFloat(getComputedStyle(wordDisplayEl).fontSize);
+    h = fs * 1.05;
+  }
+
+  caret.targetX = rect.left;
+  caret.targetY = rect.top + (rect.height - h) / 2;
+  caret.targetH = h;
+
+  if (!caret.ready) {
+    caret.x = caret.targetX;
+    caret.y = caret.targetY;
+    caret.h = caret.targetH;
+    caret.ready = true;
+  } else {
+    const ease = 1 - Math.exp(-dt * 14);
+    caret.x += (caret.targetX - caret.x) * ease;
+    caret.y += (caret.targetY - caret.y) * ease;
+    caret.h += (caret.targetH - caret.h) * ease;
+  }
+
+  caretEl.style.transform = `translate(${caret.x}px, ${caret.y}px)`;
+  caretEl.style.height = caret.h + 'px';
+
+  if (!caret.visible) {
+    caretEl.classList.add('visible');
+    caret.visible = true;
+  }
+}
+
+function tapFocusHandler(e) {
+  if (!state.playing || state.sessionComplete) return;
+  if (!menuOverlay.classList.contains('hidden')) return;
+  if (!resultsOverlay.classList.contains('hidden')) return;
+  if (e && e.target && e.target.closest) {
+    const btn = e.target.closest('button');
+    if (btn) return;
+  }
+  openKeyboard();
+}
+document.addEventListener('touchend', tapFocusHandler, { passive: true });
+document.addEventListener('click', tapFocusHandler, { passive: true });
+document.addEventListener('pointerdown', tapFocusHandler, { passive: true });
+
+function restart() { startGame(state.difficulty); }
 
 function backToMenu() {
   state.playing = false;
   state.sessionComplete = true;
-  state.input = '';
+  hiddenInput.value = '';
+  state.lastValue = '';
   state.currentWord = '';
   wordDisplayEl.innerHTML = '';
   resultsOverlay.classList.add('hidden');
   menuOverlay.classList.remove('hidden');
+  backBtn.classList.remove('visible');
+  caretEl.classList.remove('visible');
+  caret.visible = false;
+  closeSettings();
   hiddenInput.blur();
 }
 
-// ============================================================
-//  BUTTONS
-// ============================================================
 document.querySelectorAll('.cfg-row').forEach(btn => {
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
     startGame(btn.dataset.diff);
   });
 });
-
-resRestart.addEventListener('click', () => {
-  startGame(state.difficulty);
-});
-
-resMenu.addEventListener('click', () => {
+resRestart.addEventListener('click', () => startGame(state.difficulty));
+resMenu.addEventListener('click', backToMenu);
+backBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
   backToMenu();
 });
 
-// ============================================================
-//  FOCUS MANAGEMENT (Mobile)
-// ============================================================
-// Tap anywhere on the play screen -> focus input
-document.addEventListener('pointerdown', (e) => {
-  if (!state.playing || state.sessionComplete) return;
-  if (resultsOverlay.classList.contains('hidden') === false) return;
-  if (menuOverlay.classList.contains('hidden') === false) return;
-  if (e.target.tagName === 'BUTTON') return;
-  e.preventDefault();
-  focusInput();
-}, { passive: false });
-
-hiddenInput.addEventListener('blur', () => {
-  if (!state.playing || state.sessionComplete) return;
-  if (!menuOverlay.classList.contains('hidden')) return;
-  if (!resultsOverlay.classList.contains('hidden')) return;
-  setTimeout(() => {
-    if (state.playing && !state.sessionComplete) focusInput();
-  }, 10);
-});
-
-// prevent page scroll on mobile
-document.addEventListener('touchmove', (e) => {
-  if (e.target.closest('#resultsOverlay')) return;
-  e.preventDefault();
-}, { passive: false });
-
-// ============================================================
-//  TIMER
-// ============================================================
 setInterval(() => {
   if (!state.playing || state.sessionComplete) return;
   updateElapsed();
   updateStats();
 }, 100);
 
-// ============================================================
-//  MENU KEYBOARD
-// ============================================================
 document.addEventListener('keydown', (e) => {
   if (menuOverlay.classList.contains('hidden')) return;
   if (e.key === 'Enter' || e.key === ' ') {
@@ -948,6 +960,14 @@ document.addEventListener('keydown', (e) => {
     startGame(state.difficulty);
   }
 });
+
+document.addEventListener('touchmove', (e) => {
+  if (!state.playing || state.sessionComplete) return;
+  if (!menuOverlay.classList.contains('hidden')) return;
+  if (!resultsOverlay.classList.contains('hidden')) return;
+  if (e.target && e.target.closest && e.target.closest('#menuOverlay, #resultsOverlay')) return;
+  e.preventDefault();
+}, { passive: false });
 
 })();
 </script>
