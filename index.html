@@ -77,37 +77,72 @@
     justify-content:center; align-items:center;
     padding:20px 24px; position:relative; overflow:hidden;
     z-index:2; pointer-events:none;
+    min-height:0;
   }
+
   #wordDisplay {
+    width:100%;
+    max-width:100%;
+    overflow:hidden;
+    position:relative;
+    padding:20px 0;
+    transition:transform .15s;
+  }
+  #wordDisplay.fade {
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+            mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+  }
+  #wordDisplay.shake {
+    animation: displayShake .3s ease-in-out;
+  }
+  @keyframes displayShake {
+    0%,100% { transform: translateX(0); }
+    20%,60% { transform: translateX(-6px); }
+    40%,80% { transform: translateX(6px); }
+  }
+  #wordDisplay.complete .letter {
+    color: var(--main) !important;
+  }
+
+  #wordTrack {
+    display:inline-block;
+    white-space:nowrap;
     font-family:'JetBrains Mono', monospace;
     font-size:clamp(28px, 9vw, 68px);
-    font-weight:500; letter-spacing:1px; line-height:1.25;
-    text-align:center; word-break:break-word;
-    max-width:100%; padding:20px 10px;
-    transition:transform .15s; color:var(--sub);
+    font-weight:500;
+    letter-spacing:1px;
+    line-height:1.25;
+    color:var(--sub);
+    will-change:transform;
     position:relative;
   }
-  #wordDisplay .letter {
-    display:inline-block;
-    color:var(--sub);
-    transition:color .12s;
+
+  #wordTrack .letter {
+    color: var(--sub);
+    transition: color .12s;
   }
-  #wordDisplay .letter.correct { color:var(--text); }
-  #wordDisplay .letter.wrong {
+  #wordTrack .letter.correct { color: var(--text); }
+  #wordTrack .letter.wrong {
     color:var(--error);
     text-decoration:underline; text-decoration-color:var(--error);
     text-underline-offset:6px; text-decoration-thickness:3px;
   }
-  #wordDisplay .letter.extra {
-    color:var(--error-extra);
+  #wordTrack .letter.extra {
+    color: var(--error-extra);
     text-decoration:underline; text-decoration-color:var(--error-extra);
     text-underline-offset:6px; text-decoration-thickness:3px;
   }
-  #wordDisplay .caret-anchor {
+  #wordTrack .caret-anchor {
     display:inline-block;
-    width:0; height:1em;
+    width:0;
+    height:1em;
     vertical-align:baseline;
     pointer-events:none;
+  }
+  #wordTrack .virtual-spacer {
+    display:inline-block;
+    height:1em;
+    vertical-align:baseline;
   }
 
   #caret {
@@ -124,19 +159,6 @@
     will-change:transform,height,opacity;
   }
   #caret.visible { opacity:1; }
-
-  #wordDisplay.complete { animation:completePop .4s ease-out; }
-  @keyframes completePop {
-    0%   { transform:scale(1); }
-    40%  { transform:scale(1.06); color:var(--main); }
-    100% { transform:scale(1); }
-  }
-  #wordDisplay.shake { animation:shake .3s ease-in-out; }
-  @keyframes shake {
-    0%,100% { transform:translateX(0); }
-    20%,60% { transform:translateX(-8px); }
-    40%,80% { transform:translateX(8px); }
-  }
 
   .progress-wrap { width:100%; max-width:600px; padding:0 10px; margin-top:36px; }
   .progress-bar { width:100%; height:3px; background:var(--bg-sub); border-radius:2px; overflow:hidden; }
@@ -204,6 +226,7 @@
     font-weight:700; letter-spacing:1px; text-transform:lowercase;
   }
   .cfg-row .cfg-stars { color:var(--main); font-size:14px; letter-spacing:2px; }
+  .cfg-row .cfg-stars.long { font-size:11px; letter-spacing:1px; }
 
   .settings-trigger {
     position:absolute;
@@ -219,9 +242,10 @@
     background:var(--bg-sub);
     border:1px solid rgba(255,255,255,0.06);
     border-radius:10px;
-    padding:14px 18px 12px;
-    z-index:55;
-    min-width:230px;
+    padding:14px 18px 14px;
+    z-index:56;
+    min-width:280px;
+    max-width:calc(100vw - 32px);
     box-shadow:0 10px 40px rgba(0,0,0,0.55);
     animation:settingsPop .18s ease-out;
   }
@@ -276,6 +300,121 @@
   }
   .settings-row input:checked ~ .settings-checkbox svg {
     opacity:1;
+  }
+
+  .settings-sub {
+    margin-left:6px;
+    margin-top:4px;
+    padding-left:12px;
+    border-left:2px solid rgba(226,183,20,0.25);
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    animation:subReveal .2s ease-out;
+  }
+  .settings-sub.hidden { display:none; }
+  @keyframes subReveal {
+    from { opacity:0; transform:translateY(-4px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .settings-slider-row {
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    padding:2px 0;
+  }
+  .settings-slider-label {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-family:'Lexend Deca', sans-serif;
+    font-size:12px;
+    color:var(--sub);
+    text-transform:lowercase;
+    gap:8px;
+  }
+  .settings-slider-label > span:first-child {
+    flex-shrink:0;
+  }
+  .slider-value {
+    color:var(--main);
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    font-variant-numeric:tabular-nums;
+    background:transparent;
+    border:1px solid transparent;
+    border-radius:4px;
+    padding:2px 6px;
+    width:64px;
+    text-align:right;
+    outline:none;
+    transition:all .15s;
+    cursor:text;
+    -webkit-appearance:none;
+    appearance:none;
+    -moz-appearance:textfield;
+    user-select:text;
+    -webkit-user-select:text;
+  }
+  .slider-value::-webkit-outer-spin-button,
+  .slider-value::-webkit-inner-spin-button {
+    -webkit-appearance:none;
+    appearance:none;
+    margin:0;
+  }
+  .slider-value:hover {
+    border-color:rgba(226,183,20,0.35);
+  }
+  .slider-value:focus {
+    border-color:var(--main);
+    background:rgba(226,183,20,0.08);
+    cursor:text;
+  }
+
+  .settings-slider-row input[type="range"] {
+    -webkit-appearance:none;
+    appearance:none;
+    width:100%;
+    height:20px;
+    background:transparent;
+    outline:none;
+    cursor:pointer;
+    margin:0;
+    padding:0;
+  }
+  .settings-slider-row input[type="range"]::-webkit-slider-runnable-track {
+    height:4px;
+    background:var(--sub-alt);
+    border-radius:2px;
+  }
+  .settings-slider-row input[type="range"]::-moz-range-track {
+    height:4px;
+    background:var(--sub-alt);
+    border-radius:2px;
+  }
+  .settings-slider-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance:none;
+    appearance:none;
+    width:14px;
+    height:14px;
+    background:var(--main);
+    border-radius:50%;
+    cursor:pointer;
+    border:none;
+    margin-top:-5px;
+    transition:transform .12s;
+  }
+  .settings-slider-row input[type="range"]::-webkit-slider-thumb:active {
+    transform:scale(1.2);
+  }
+  .settings-slider-row input[type="range"]::-moz-range-thumb {
+    width:14px;
+    height:14px;
+    background:var(--main);
+    border-radius:50%;
+    cursor:pointer;
+    border:none;
   }
 
   #resultsOverlay {
@@ -339,7 +478,7 @@
     .stat .lbl { font-size:8px; letter-spacing:1px; }
     .stats { gap:14px; }
     main { padding:14px 16px; }
-    #wordDisplay { padding:14px 6px; }
+    #wordDisplay { padding:14px 0; }
     .progress-wrap { margin-top:24px; padding:0; }
     .footer { padding:10px 14px 14px; gap:14px; font-size:10px; }
     #menuOverlay { gap:16px; padding:20px; }
@@ -347,14 +486,16 @@
     #menuOverlay .menu-logo .tail { font-size:14px; }
     .cfg-row { padding:13px 16px; font-size:15px; }
     .cfg-row .cfg-stars { font-size:12px; letter-spacing:1.5px; }
+    .cfg-row .cfg-stars.long { font-size:9px; letter-spacing:0.5px; }
     .results-grid { gap:22px 32px; }
     .results-item .value { font-size:38px; }
     .results-item .value.small { font-size:22px; }
     .back-btn { width:34px; height:34px; }
-    .settings-panel { top:64px; right:12px; min-width:200px; }
+    .settings-panel { top:64px; right:12px; min-width:250px; padding:12px 14px 12px; }
+    .slider-value { width:56px; padding:2px 4px; }
   }
   @media (max-height: 500px) {
-    #wordDisplay { padding:8px 6px; }
+    #wordDisplay { padding:8px 0; }
     .progress-wrap { margin-top:14px; }
     .footer { padding:6px 14px 10px; }
   }
@@ -385,7 +526,9 @@
   </header>
 
   <main>
-    <div id="wordDisplay"></div>
+    <div id="wordDisplay">
+      <div id="wordTrack"></div>
+    </div>
     <div class="progress-wrap">
       <div class="progress-bar"><div id="progressFill"></div></div>
       <div class="progress-label"><span id="progressLabel">1 / 25</span></div>
@@ -403,6 +546,7 @@
     <div id="settingsTrigger" class="settings-trigger" aria-label="Einstellungen"></div>
     <div id="settingsPanel" class="settings-panel hidden">
       <div class="settings-title">settings</div>
+
       <label class="settings-row">
         <span class="settings-label">auto correct</span>
         <input type="checkbox" id="autoCorrectCheckbox">
@@ -412,6 +556,46 @@
           </svg>
         </span>
       </label>
+
+      <label class="settings-row">
+        <span class="settings-label">auto type</span>
+        <input type="checkbox" id="autoTypeCheckbox">
+        <span class="settings-checkbox">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </span>
+      </label>
+
+      <div id="autoTypeOptions" class="settings-sub hidden">
+        <div class="settings-slider-row">
+          <div class="settings-slider-label">
+            <span>wpm</span>
+            <input type="number" class="slider-value" id="wpmValue" min="1" max="1000" step="1" value="400" inputmode="numeric" autocomplete="off">
+          </div>
+          <input type="range" id="wpmSlider" min="1" max="1000" value="400" step="1">
+        </div>
+
+        <label class="settings-row">
+          <span class="settings-label">vary</span>
+          <input type="checkbox" id="varyCheckbox">
+          <span class="settings-checkbox">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </span>
+        </label>
+
+        <div id="varyOptions" class="settings-sub hidden">
+          <div class="settings-slider-row">
+            <div class="settings-slider-label">
+              <span>vary strength</span>
+              <input type="number" class="slider-value" id="varyValue" min="0" max="1000" step="1" value="10" inputmode="numeric" autocomplete="off">
+            </div>
+            <input type="range" id="varySlider" min="0" max="1000" value="10" step="1">
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="menu-logo">
@@ -440,6 +624,10 @@
         <span class="cfg-name">sehr einfach</span>
         <span class="cfg-stars">★★★★★</span>
       </button>
+      <button class="cfg-row" data-diff="laengstes_wort">
+        <span class="cfg-name">längstes wort</span>
+        <span class="cfg-stars long">★★★★★★</span>
+      </button>
     </div>
   </div>
 
@@ -466,13 +654,23 @@
 (() => {
 'use strict';
 
+const TITIN_WORD = 'Methionylthreonylthreonylglutaminylarginyltyrosylglutamylserylleucylphenylalanylalanylglutaminylleucyllysylglutamylarginyllysylglutamylglycylalanylphenylalanylvalylprolylphenylalanylvalylthreonylleucylglycylaspartylprolylglycylisoleucylglutamylglutaminylserylleucyllysylisoleucylaspartylthreonylleucylisoleucylglutamylalanylglycylalanylaspartylalanylleucylglutamylleucylglycylisoleucylprolylphenylalanylserylaspartylprolylleucylalanylaspartylglycylprolylthreonylisoleucylglutaminylasparaginylalanylthreonylleucylarginylalanylphenylalanylalanylalanylglycylvalylthreonylprolylalanylglutaminylcysteinylphenylalanylglutamylmethionylleucylalanylleucylisoleucylarginylglutaminyllysylhistidylprolylthreonylisoleucylprolylisoleucylglycylleucylleucylmethionyltyrosylalanylasparaginylleucylvalylphenylalanylasparaginyllysylglycylisoleucylaspartylglutamylphenylalanyltyrosylalanylglutaminylcysteinylglutamyllysylvalylglycylvalylaspartylserylvalylleucylvalylalanylaspartylvalylprolylvalylglutaminylglutamylserylalanylprolylphenylalanylarginylglutaminylalanylalanylleucylarginylhistidylasparaginylvalylalanylprolylisoleucylphenylalanylisoleucylcysteinylprolylprolylaspartylalanylaspartylaspartylaspartylleucylleucylarginylglutaminylisoleucylalanylseryltyrosylglycylarginylglycyltyrosylthreonyltyrosylleucylleucylserylarginylalanylglycylvalylthreonylglycylalanylglutamylasparaginylarginylalanylalanylleucylprolylleucylasparaginylhistidylleucylvalylalanyllysylleucyllysylglutamyltyrosylasparaginylalanylalanylprolylprolylleucylglutaminylglycylphenylalanylglycylisoleucylserylalanylprolylaspartylglutaminylvalyllysylalanylalanylisoleucylaspartylalanylglycylalanylalanylglycylalanylisoleucylserylglycylserylalanylisoleucylvalyllysylisoleucylisoleucylglutamylglutaminylhistidylasparaginylisoleucylglutamylprolylglutamyllysylmethionylleucylalanylalanylleucyllysylvalylphenylalanylvalylglutaminylprolylmethionyllysylalanylalanylthreonylarginylacetylseryltyrosylserylisoleucylthreonylserylprolylserylglutaminylphenylalanylvalylphenylalanylleucylserylserylvalyltryptophylalanylaspartylprolylisoleucylglutamylleucylleucylasparaginylvalylcysteinylthreonylserylserylleucylglycylasparaginylglutaminylphenylalanylglutaminylthreonylglutaminylglutaminylalanylarginylthreonylthreonylglutaminylvalylglutaminylglutaminylphenylalanylserylglutaminylvalyltryptophyllysylprolylphenylalanylprolylglutaminylserylthreonylvalylarginylphenylalanylprolylglycylaspartylvalyltyrosyllysylvalyltyrosylarginyltyrosylasparaginylalanylvalylleucylaspartylprolylleucylisoleucylthreonylalanylleucylleucylglycylthreonylphenylalanylaspartylthreonylarginylasparaginylarginylisoleucylisoleucylglutamylvalylglutamylasparaginylglutaminylglutaminylserylprolylthreonylthreonylalanylglutamylthreonylleucylaspartylalanylthreonylarginylarginylvalylaspartylaspartylalanylthreonylvalylalanylisoleucylarginylserylalanylasparaginylisoleucylasparaginylleucylvalylasparaginylglutamylleucylvalylarginylglycylthreonylglycylleucyltyrosylasparaginylglutaminylasparaginylthreonylphenylalanylglutamylserylmethionylserylglycylleucylvalyltryptophylthreonylserylalanylprolylalanyltitinmethionylglutaminylarginyltyrosylglutamylserylleucylphenylalanylalanylisoleucylcysteinylprolylprolylaspartylalanylaspartylaspartylaspartylleucylleucylarginylglutaminylisoleucylalanylseryltyrosylglycylarginylglycyltyrosylthreonyltyrosylleucylleucylserylarginylalanylglycylvalylthreonylglycylalanylglutamylasparaginylarginylalanylalanylleucylprolylleucylasparaginylhistidylleucylvalylalanyllysylleucyllysylglutamyltyrosylasparaginylalanylalanylprolylprolylleucylglutaminylglycylphenylalanylglycylisoleucylserylalanylprolylaspartylglutaminylvalyllysylalanylalanylisoleucylaspartylalanylglycylalanylalanylglycylalanylisoleucylserylglycylserylalanylisoleucylvalyllysylisoleucylisoleucylglutamylglutaminylhistidylasparaginylisoleucylglutamylprolylglutamyllysylmethionylleucylalanylalanylleucyllysylvalylphenylalanylvalylglutaminylprolylmethionyllysylalanylalanylthreonylarginylacetylseryltyrosylserylisoleucylthreonylserylprolylserylglutaminylphenylalanylvalylphenylalanylleucylserylserylvalyltryptophylalanylaspartylprolylisoleucylglutamylleucylleucylasparaginylvalylcysteinylthreonylserylserylleucylglycylasparaginylglutaminylphenylalanylglutaminylthreonylglutaminylglutaminylalanylarginylthreonylthreonylglutaminylvalylglutaminylglutaminylphenylalanylserylglutaminylvalyltryptophyllysylprolylphenylalanylprolylglutaminylse';
+
 const WORDS = {
   einfach: `Haus Baum Hund Katze Ball Buch Tisch Stuhl Tür Wand Bett Auto Zug Bus Schiff Sonne Mond Stern Himmel Wolke Regen Schnee Wind Wasser Feuer Erde Sand Stein Berg Tal Fluss Meer See Wald Wiese Feld Garten Blume Rose Tulpe Gras Blatt Ast Wurzel Apfel Birne Banane Kirsche Traube Beere Brot Käse Milch Butter Ei Fleisch Fisch Reis Nudel Suppe Salat Kuchen Torte Keks Zucker Salz Pfeffer Honig Kaffee Tee Saft Bier Wein Glas Tasse Teller Löffel Gabel Messer Topf Pfanne Herd Schrank Regal Sofa Sessel Teppich Lampe Kerze Bild Uhr Spiegel Kamm Bürste Seife Handtuch Hemd Hose Rock Kleid Jacke Mantel Schuh Stiefel Socke Mütze Hut Schal Handschuh Gürtel Tasche Koffer Schlüssel Geld Münze Schein Karte Brief Paket Zeitung Heft Stift Bleistift Kuli Lineal Schere Kleber Papier Ordner Mappe Computer Laptop Handy Telefon Radio Kamera Foto Film Musik Lied Tanz Spiel Sport Fußball Tennis Schwimmen Laufen Springen Klettern Radfahren Reiten Wandern Kochen Backen Malen Lesen Schreiben Rechnen Lernen Spielen Schlafen Essen Trinken Gehen Kommen Sehen Hören Sprechen Denken Fühlen Lachen Weinen Singen Tanzen Kind Baby Mann Frau Junge Mädchen Vater Mutter Bruder Schwester Oma Opa Onkel Tante Freund Nachbar Lehrer Arzt Polizist Feuerwehr Bein Arm Hand Kopf Auge Ohr Nase Mund Zahn Zunge Hals Schulter Rücken Bauch Knie Fuß Zeh Haar Haut Blut Knochen Herz Lunge Leber Magen Darm Gehirn Nerv Muskel`.split(/\s+/).filter(Boolean),
   mittel: `Computer Fernseher Telefon Bibliothek Krankenhaus Flughafen Bahnhof Restaurant Supermarkt Apotheke Bäckerei Metzgerei Friseur Schule Universität Kindergarten Spielplatz Schwimmbad Stadion Kino Theater Museum Kirche Rathaus Brücke Tunnel Straße Autobahn Fahrrad Motorrad Lastwagen Traktor Hubschrauber Rakete Satellit Planet Galaxie Universum Wissenschaft Forschung Experiment Labor Chemie Physik Biologie Mathematik Geschichte Geographie Sprache Grammatik Vokabel Wörterbuch Übersetzung Erzählung Gedicht Roman Krimi Komödie Tragödie Schauspieler Regisseur Mikrofon Lautsprecher Kopfhörer Bildschirm Tastatur Drucker Scanner Internet Website Programm Software Hardware Datenbank Server Netzwerk Passwort Sicherheit Virenschutz Update Download Upload Nachricht Anruf Gespräch Diskussion Meinung Argument Beweis Frage Antwort Problem Lösung Idee Plan Projekt Ziel Erfolg Fehler Versuch Ergebnis Erfahrung Wissen Bildung Ausbildung Studium Prüfung Zeugnis Klasse Kurs Seminar Vorlesung Professor Student Schüler Hausaufgabe Pause Ferien Urlaub Reise Ausflug Wanderung Abenteuer Erlebnis Erinnerung Gefühl Emotion Freude Trauer Angst Mut Hoffnung Liebe Freundschaft Familie Verwandte Gesellschaft Gemeinschaft Kultur Tradition Religion Politik Wirtschaft Industrie Handwerk Landwirtschaft Technik Erfindung Entdeckung Fortschritt Zukunft Vergangenheit Gegenwart Augenblick Moment Sekunde Minute Stunde Woche Monat Jahr Jahrzehnt Jahrhundert Jahrtausend Zeitraum Kalender Datum Geburtstag Feiertag Wochenende Montag Dienstag Mittwoch Donnerstag Freitag Samstag Sonntag Januar Februar März April Juni Juli August September Oktober November Dezember Frühling Sommer Herbst Winter Morgen Mittag Abend Nacht Sonnenaufgang Sonnenuntergang Mondlicht Sternenhimmel Regenbogen Gewitter Blitz Donner Sturm Orkan Tornado Erdbeben Überschwemmung Dürre Hitze Kälte Frost Eis Schneefall Nebel Dunst Tau Reif`.split(/\s+/).filter(Boolean),
   schwer: `Wahrscheinlichkeit Geschwindigkeit Verantwortung Zusammenarbeit Kommunikation Information Organisation Konzentration Motivation Kreativität Flexibilität Professionalität Persönlichkeit Eigenschaft Fähigkeit Fertigkeit Kenntnisse Erfahrungen Erkenntnisse Wissenschaftler Forscher Entdecker Erfinder Ingenieur Architekt Journalist Fotograf Musiker Komponist Dirigent Schriftsteller Dichter Maler Bildhauer Designer Programmierer Entwickler Administrator Assistent Manager Direktor Präsident Kanzler Minister Abgeordneter Bürgermeister Polizistin Feuerwehrfrau Krankenschwester Apotheker Zahnarzt Tierarzt Anwalt Richter Notar Steuerberater Buchhalter Verkäufer Kellner Bäcker Metzger Friseur Gärtner Landwirt Handwerker Tischler Schreiner Maurer Dachdecker Elektriker Installateur Mechaniker Schlosser Schweißer Bauingenieur Maschinenbau Elektrotechnik Mechatronik Informatik Pharmazie Psychologie Soziologie Philosophie Theologie Pädagogik Didaktik Methodik Rhetorik Orthografie Interpunktion Silbentrennung Großschreibung Kleinschreibung Rechtschreibung Zeichensetzung Inhaltsangabe Interpretation Charakterisierung Erörterung Stellungnahme Zusammenfassung Beschreibung Berichterstattung Dokumentation Präsentation Moderation Debatte Argumentation Widerlegung Begründung Schlussfolgerung Voraussetzung Bedingung Konsequenz Kausalität Statistik Analyse Synthese Hypothese Theorie Praxis Methode Strategie Taktik Konzept Struktur System Prozess Verfahren Technologie Innovation Revolution Evolution Transformation Modifikation Variation Kombination Integration Migration Immigration Emigration Population Generation Situation Position Funktion Reaktion Aktion Interaktion Kooperation Kollaboration Konfrontation Konflikt Kompromiss Konsens Dissens Diskurs Dialog Monolog Prolog Epilog Katalog Analogie Anomalie Symmetrie Asymmetrie Hierarchie Monarchie Demokratie Aristokratie Bürokratie Autokratie Theokratie Anarchie Oligarchie Plutokratie Meritokratie Technokratie Atmosphäre Stratosphäre Ionosphäre Biosphäre Ökosphäre Hydrosphäre Lithosphäre`.split(/\s+/).filter(Boolean),
   unmöglich: `Hilfeleistungslöschgruppenfahrzeug Rindfleischetikettierungsüberwachungsaufgabenübertragungsgesetz Lebensmittelverschwendungsverordnung Datenschutzgrundverordnung Bundesdatenschutzbeauftragter Rechtsschutzversicherungsgesellschaft Bundesausbildungsförderungsgesetz Kraftfahrzeughaftpflichtversicherung Arbeiterunfallversicherungsgesetz Grundstücksverkehrsgenehmigungszuständigkeitsübertragungsverordnung Donaudampfschifffahrtsgesellschaftskapitän Donaudampfschifffahrtsgesellschaftskapitänswitwe Donaudampfschifffahrtsgesellschaftskapitänskajüte Oberammergauerpassionsspiel Binnenlandsschifffahrtsstraßenordnung Verkehrsinfrastrukturfinanzierungsgesellschaft Straßenverkehrsordnungswidrigkeit Straßenverkehrszulassungsordnung Betriebsverfassungsgesetz Handelsgesetzbuch Bürgerlichesgesetzbuch Strafgesetzbuch Sozialgesetzbuch Baugesetzbuch Steuerberatungsgesetz Wirtschaftsprüferordnung Versicherungsvertragsgesetz Kraftfahrzeugsteuergesetz Personenbeförderungsgesetz Güterkraftverkehrsgesetz Telekommunikationsgesetz Energiewirtschaftsgesetz Kreislaufwirtschaftsgesetz Wasserhaushaltsgesetz Bundesimmissionsschutzgesetz Bundesnaturschutzgesetz Tierschutzgesetz Lebensmittelhygieneverordnung Trinkwasserverordnung Gefahrstoffverordnung Betriebssicherheitsverordnung Arbeitsstättenverordnung Arbeitszeitgesetz Bundesurlaubsgesetz Entgeltfortzahlungsgesetz Kündigungsschutzgesetz Betriebsrentengesetz Pflegezeitgesetz Familienpflegezeitgesetz Elterngeldgesetz Mutterschutzgesetz Jugendarbeitsschutzgesetz Schwerbehindertengesetz Behindertengleichstellungsgesetz Antidiskriminierungsgesetz Teilzeitbefristungsgesetz Arbeitnehmerüberlassungsgesetz Mindestlohngesetz Tarifautonomiestärkungsgesetz Rentenversicherungsnachhaltigkeitsgesetz Alterssicherungsgesetz Betriebsrentenstärkungsgesetz Pflegestärkungsgesetz Krankenhausstrukturgesetz Versorgungsstrukturgesetz Arzneimittelversorgungsgesetz Infektionsschutzgesetz Masernschutzgesetz Impfschutzgesetz Bevölkerungsschutzgesetz Katastrophenschutzgesetz Zivilschutzgesetz Wehrpflichtgesetz Soldatengesetz Beamtenstatusgesetz Bundesbeamtengesetz Richtergesetz Notarstandsgesetz Rechtsanwaltsordnung Patentanwaltsordnung Steuerberatungsordnung Handwerksordnung Gewerbeordnung Aktiengesetz Genossenschaftsgesetz Umwandlungsgesetz Insolvenzordnung Zivilprozessordnung Strafprozessordnung Verwaltungsgerichtsordnung Finanzgerichtsordnung Sozialgerichtsgesetz Arbeitsgerichtsgesetz Verwaltungsverfahrensgesetz Verwaltungszustellungsgesetz Verwaltungsvollstreckungsgesetz Informationsfreiheitsgesetz Umweltinformationsgesetz Verbraucherinformationsgesetz Wirtschaftsstabilisierungsfondsgesetz Finanzmarktstabilisierungsgesetz Einlagensicherungsgesetz Kreditwesengesetz Wertpapierhandelsgesetz Börsengesetz Kapitalanlagegesetzbuch Versicherungsaufsichtsgesetz Zahlungsdiensteaufsichtsgesetz Fahrzeugidentifikationsnummer Verkehrszeichenerkennungssystem Fahrerassistenzsystem Programmierschnittstelle Datenbankmanagementsystem Computersystemadministrator Verschlüsselungstechnik Kryptographietechnik Drehleiterfahrzeug Rüstwagen Gerätewagen Mannschaftstransportfahrzeug Einsatzleitwagen Kommandowagen Hubrettungsfahrzeug Tanklöschfahrzeug Löschgruppenfahrzeug Personenkraftwagen Nutzfahrzeugindustrie Maschinenbauingenieurwesen Elektrotechnikstudium Informationstechnologie Telekommunikationsunternehmen Energieversorgungsunternehmen Versorgungsnetzbetreiber Bauleitplanungsverfahren Baugenehmigungsverfahren Grundbuchamt Katasteramt Wasseraufbereitungsanlage Abwasserentsorgungsbetrieb Müllverbrennungsanlage Recyclingwirtschaft Kreislaufwirtschaft Entsorgungswirtschaft Verpackungsverordnung Elektroschrottverordnung Batterieverordnung Altfahrzeugverordnung Chemikalienverordnung Pflanzenschutzmittelverordnung Düngemittelverordnung Futtermittelverordnung Tierarzneimittelverordnung Tierimpfstoffverordnung Arzneimittelzulassungsverordnung Medizinprodukteverordnung Krankenhausentlassungsmanagement Notaufnahmestation Facharztausbildung Approbationsordnung Heilmittelverordnung Pharmakovigilanzsystem Qualitätssicherungsmaßnahme Risikomanagementsystem Sicherheitsbeauftragter Datenschutzbeauftragter Gleichstellungsbeauftragter Behindertenbeauftragter Tierschutzbeauftragter Umweltschutzbeauftragter Bundesrechnungshof Landesrechnungshof Rechnungshofbericht Rechnungsprüfungsamt Prüfungsausschuss Hauptversammlung Aufsichtsrat Vorstandsvorsitzender Geschäftsführerbetriebsrat Personalvertretungsgesetz Bundespersonalvertretungsgesetz Landespersonalvertretungsgesetz Mitbestimmungsgesetz Betriebsverfassungsnovelle Unternehmensmitbestimmung Qualitätsmanagement Umweltmanagement Energiemanagement Sicherheitsmanagement Wissensmanagement Changemanagement Projektmanagement Prozessoptimierung Geschäftsprozessoptimierung Effizienzsteigerung Produktivitätssteigerung Wettbewerbsfähigkeit Zukunftsfähigkeit Nachhaltigkeitsstrategie Digitalisierungsstrategie Innovationsstrategie Wachstumsstrategie Vertriebsstrategie Marketingstrategie Kommunikationsstrategie Unternehmensstrategie`.split(/\s+/).filter(Boolean),
-  sehr_einfach: `Hilfeleistungslöschgruppenfahrzeug Rindfleischetikettierungsüberwachungsaufgabenübertragungsgesetz Grundstücksverkehrsgenehmigungszuständigkeitsübertragungsverordnung Donaudampfschifffahrtsgesellschaftskapitän Donaudampfschifffahrtsgesellschaftskapitänswitwe Donaudampfschifffahrtsgesellschaftskapitänskajüte Donaudampfschifffahrtsgesellschaftskapitänsmütze Donaudampfschifffahrtsgesellschaftskapitänsuniform Kraftfahrzeughaftpflichtversicherung Arbeiterunfallversicherungsgesetz Bundesausbildungsförderungsgesetz Lebensmittelverschwendungsverordnung Bundesdatenschutzbeauftragter Rechtsschutzversicherungsgesellschaft Verkehrsinfrastrukturfinanzierungsgesellschaft Straßenverkehrsordnungswidrigkeit Straßenverkehrszulassungsordnung Binnenlandsschifffahrtsstraßenordnung Betriebsverfassungsgesetz Wirtschaftsprüferordnung Versicherungsvertragsgesetz Kraftfahrzeugsteuergesetz Personenbeförderungsgesetz Telekommunikationsgesetz Energiewirtschaftsgesetz Kreislaufwirtschaftsgesetz Bundesimmissionsschutzgesetz Lebensmittelhygieneverordnung Betriebssicherheitsverordnung Entgeltfortzahlungsgesetz Jugendarbeitsschutzgesetz Behindertengleichstellungsgesetz Antidiskriminierungsgesetz Teilzeitbefristungsgesetz Arbeitnehmerüberlassungsgesetz Tarifautonomiestärkungsgesetz Rentenversicherungsnachhaltigkeitsgesetz Betriebsrentenstärkungsgesetz Krankenhausstrukturgesetz Arzneimittelversorgungsgesetz Bevölkerungsschutzgesetz Katastrophenschutzgesetz Verwaltungsgerichtsordnung Verwaltungsverfahrensgesetz Verwaltungszustellungsgesetz Verwaltungsvollstreckungsgesetz Informationsfreiheitsgesetz Umweltinformationsgesetz Verbraucherinformationsgesetz Wirtschaftsstabilisierungsfondsgesetz Finanzmarktstabilisierungsgesetz Einlagensicherungsgesetz Versicherungsaufsichtsgesetz Zahlungsdiensteaufsichtsgesetz Fahrzeugidentifikationsnummer Verkehrszeichenerkennungssystem Programmierschnittstelle Datenbankmanagementsystem Computersystemadministrator Mannschaftstransportfahrzeug Maschinenbauingenieurwesen Telekommunikationsunternehmen Energieversorgungsunternehmen Wasseraufbereitungsanlage Abwasserentsorgungsbetrieb Pflanzenschutzmittelverordnung Tierarzneimittelverordnung Arzneimittelzulassungsverordnung Medizinprodukteverordnung Krankenhausentlassungsmanagement Qualitätssicherungsmaßnahme Risikomanagementsystem Gleichstellungsbeauftragter Umweltschutzbeauftragter Geschäftsführerbetriebsrat Personalvertretungsgesetz Bundespersonalvertretungsgesetz Landespersonalvertretungsgesetz Betriebsverfassungsnovelle Unternehmensmitbestimmung Geschäftsprozessoptimierung Produktivitätssteigerung Nachhaltigkeitsstrategie Digitalisierungsstrategie Kommunikationsstrategie Umweltverträglichkeitsprüfung Umweltschutzorganisation Nachhaltigkeitsbericht Nachhaltigkeitskonzept Energieversorgungssicherheit Energieeinsparverordnung Strahlenschutzverordnung Strahlenschutzbeauftragter Atomkraftwerksbetreiber Atomkraftwerkssicherheit Reaktorsicherheitskommission Sicherheitsüberprüfungsgesetz Kriegsverbrechertribunal Menschenrechtsorganisation Menschenrechtsbeauftragter Oberverwaltungsgerichtshof Bundesverwaltungsgericht Sicherheitsüberprüfung Verwaltungsdigitalisierung Aufmerksamkeitsdefizitsyndrom Aufmerksamkeitsdefizithyperaktivitätssyndrom Fußballweltmeisterschaftsqualifikationsspiel Mehrzweckkampfflugzeug Hochleistungsrechnerarchitektur Höchstgeschwindigkeitsbegrenzung Geschwindigkeitsüberschreitung Geschwindigkeitsbeschränkung Geschwindigkeitsbegrenzung Reaktionsgeschwindigkeit Verhaltensauffälligkeiten Notfallsanitätergesetz Rettungsdienstgesetz Lawinenverschüttetensuchgerät Katastrophenschutzbehörde Dienstreisekostenabrechnung Betriebshaftpflichtversicherung Privathaftpflichtversicherung Elementarschadenversicherung Wohngebäudeversicherung Nahrungsergänzungsmittelverordnung Nahrungsmittelunverträglichkeit Verfassungsgerichtshofentscheidung Ministerpräsidentenkonferenz Generalstaatsanwaltschaft Bundesverfassungsgericht Verfassungsbeschwerde Menschenrechtsverletzung Kinderrechtskonvention Klimaschutzvereinbarung Klimarahmenkonvention`.split(/\s+/).filter(Boolean),
+  sehr_einfach: `Hilfeleistungslöschgruppenfahrzeug Rindfleischetikettierungsüberwachungsaufgabenübertragungsgesetz Grundstücksverkehrsgenehmigungszuständigkeitsübertragungsverordnung Donaudampfschifffahrtsgesellschaftskapitän Donaudampfschifffahrtsgesellschaftskapitänswitwe Donaudampfschifffahrtsgesellschaftskapitänskajüte Donaudampfschifffahrtsgesellschaftskapitänsmütze Donaudampfschifffahrtsgesellschaftskapitänsuniform Donaudampfschifffahrtselektrizitätenhauptbetriebswerkbauunterbeamtengesellschaft Aufmerksamkeitsdefizit-Hyperaktivitätsstörung Aufmerksamkeitsdefizitsyndrom Aufmerksamkeitsdefizithyperaktivitätssyndrom Kraftfahrzeughaftpflichtversicherung Arbeiterunfallversicherungsgesetz Bundesausbildungsförderungsgesetz Lebensmittelverschwendungsverordnung Bundesdatenschutzbeauftragter Rechtsschutzversicherungsgesellschaft Verkehrsinfrastrukturfinanzierungsgesellschaft Straßenverkehrsordnungswidrigkeit Straßenverkehrszulassungsordnung Binnenlandsschifffahrtsstraßenordnung Betriebsverfassungsgesetz Wirtschaftsprüferordnung Versicherungsvertragsgesetz Kraftfahrzeugsteuergesetz Personenbeförderungsgesetz Telekommunikationsgesetz Energiewirtschaftsgesetz Kreislaufwirtschaftsgesetz Bundesimmissionsschutzgesetz Lebensmittelhygieneverordnung Betriebssicherheitsverordnung Entgeltfortzahlungsgesetz Jugendarbeitsschutzgesetz Behindertengleichstellungsgesetz Antidiskriminierungsgesetz Teilzeitbefristungsgesetz Arbeitnehmerüberlassungsgesetz Tarifautonomiestärkungsgesetz Rentenversicherungsnachhaltigkeitsgesetz Betriebsrentenstärkungsgesetz Krankenhausstrukturgesetz Arzneimittelversorgungsgesetz Bevölkerungsschutzgesetz Katastrophenschutzgesetz Verwaltungsgerichtsordnung Verwaltungsverfahrensgesetz Verwaltungszustellungsgesetz Verwaltungsvollstreckungsgesetz Informationsfreiheitsgesetz Umweltinformationsgesetz Verbraucherinformationsgesetz Wirtschaftsstabilisierungsfondsgesetz Finanzmarktstabilisierungsgesetz Einlagensicherungsgesetz Versicherungsaufsichtsgesetz Zahlungsdiensteaufsichtsgesetz Fahrzeugidentifikationsnummer Verkehrszeichenerkennungssystem Programmierschnittstelle Datenbankmanagementsystem Computersystemadministrator Mannschaftstransportfahrzeug Maschinenbauingenieurwesen Telekommunikationsunternehmen Energieversorgungsunternehmen Wasseraufbereitungsanlage Abwasserentsorgungsbetrieb Pflanzenschutzmittelverordnung Tierarzneimittelverordnung Arzneimittelzulassungsverordnung Medizinprodukteverordnung Krankenhausentlassungsmanagement Qualitätssicherungsmaßnahme Risikomanagementsystem Gleichstellungsbeauftragter Umweltschutzbeauftragter Geschäftsführerbetriebsrat Personalvertretungsgesetz Bundespersonalvertretungsgesetz Landespersonalvertretungsgesetz Betriebsverfassungsnovelle Unternehmensmitbestimmung Geschäftsprozessoptimierung Produktivitätssteigerung Nachhaltigkeitsstrategie Digitalisierungsstrategie Kommunikationsstrategie Umweltverträglichkeitsprüfung Umweltschutzorganisation Nachhaltigkeitsbericht Nachhaltigkeitskonzept Energieversorgungssicherheit Energieeinsparverordnung Strahlenschutzverordnung Strahlenschutzbeauftragter Atomkraftwerksbetreiber Atomkraftwerkssicherheit Reaktorsicherheitskommission Sicherheitsüberprüfungsgesetz Kriegsverbrechertribunal Menschenrechtsorganisation Menschenrechtsbeauftragter Oberverwaltungsgerichtshof Bundesverwaltungsgericht Sicherheitsüberprüfung Verwaltungsdigitalisierung Fußballweltmeisterschaftsqualifikationsspiel Mehrzweckkampfflugzeug Hochleistungsrechnerarchitektur Höchstgeschwindigkeitsbegrenzung Geschwindigkeitsüberschreitung Geschwindigkeitsbeschränkung Geschwindigkeitsbegrenzung Reaktionsgeschwindigkeit Verhaltensauffälligkeiten Notfallsanitätergesetz Rettungsdienstgesetz Lawinenverschüttetensuchgerät Katastrophenschutzbehörde Dienstreisekostenabrechnung Betriebshaftpflichtversicherung Privathaftpflichtversicherung Elementarschadenversicherung Wohngebäudeversicherung Nahrungsergänzungsmittelverordnung Nahrungsmittelunverträglichkeit Verfassungsgerichtshofentscheidung Ministerpräsidentenkonferenz Generalstaatsanwaltschaft Bundesverfassungsgericht Verfassungsbeschwerde Menschenrechtsverletzung Kinderrechtskonvention Klimaschutzvereinbarung Klimarahmenkonvention`.split(/\s+/).filter(Boolean),
+  laengstes_wort: [TITIN_WORD],
 };
+
+const SESSION_LENGTH = 25;
+const VIRTUALIZE_THRESHOLD = 200;
+const WINDOW_SIZE = 500;
+const WINDOW_BUFFER = 100;
+const FIXED_X_RATIO = 0.33;
+const TREADMILL_WIDTH_RATIO = 0.85;
 
 function shuffle(arr) {
   const a = arr.slice();
@@ -504,10 +702,12 @@ function buildSessionPool(allWords) {
   return result;
 }
 
-const SESSION_LENGTH = 25;
-
 const settings = {
-  autoCorrect: false
+  autoCorrect: false,
+  autoType: false,
+  autoTypeWpm: 400,
+  vary: false,
+  varyStrength: 10,
 };
 
 try {
@@ -515,8 +715,18 @@ try {
   if (stored) {
     const parsed = JSON.parse(stored);
     if (typeof parsed.autoCorrect === 'boolean') settings.autoCorrect = parsed.autoCorrect;
+    if (typeof parsed.autoType === 'boolean') settings.autoType = parsed.autoType;
+    if (typeof parsed.autoTypeWpm === 'number') settings.autoTypeWpm = parsed.autoTypeWpm;
+    if (typeof parsed.vary === 'boolean') settings.vary = parsed.vary;
+    if (typeof parsed.varyStrength === 'number') settings.varyStrength = parsed.varyStrength;
   }
 } catch (e) {}
+
+function saveSettings() {
+  try {
+    localStorage.setItem('typingchallenge-settings', JSON.stringify(settings));
+  } catch (e) {}
+}
 
 const state = {
   difficulty: 'einfach',
@@ -534,14 +744,22 @@ const state = {
   shakeTimeout: null,
 };
 
+let renderedStart = 0;
+let renderedEnd = 0;
+let currentTrackOffset = 0;
+let trackOffsetReady = false;
+let lastMode = null;
+
+let autoTypeTimer = null;
+
 const caret = {
   x: 0, y: 0, h: 16,
-  targetX: 0, targetY: 0, targetH: 16,
   ready: false,
   visible: false,
 };
 
 const wordDisplayEl = document.getElementById('wordDisplay');
+const wordTrackEl = document.getElementById('wordTrack');
 const caretEl = document.getElementById('caret');
 const hiddenInput = document.getElementById('hiddenInput');
 const menuOverlay = document.getElementById('menuOverlay');
@@ -561,24 +779,33 @@ const backBtn = document.getElementById('backBtn');
 const settingsTrigger = document.getElementById('settingsTrigger');
 const settingsPanel = document.getElementById('settingsPanel');
 const autoCorrectCheckbox = document.getElementById('autoCorrectCheckbox');
+const autoTypeCheckbox = document.getElementById('autoTypeCheckbox');
+const autoTypeOptions = document.getElementById('autoTypeOptions');
+const wpmSlider = document.getElementById('wpmSlider');
+const wpmValue = document.getElementById('wpmValue');
+const varyCheckbox = document.getElementById('varyCheckbox');
+const varyOptions = document.getElementById('varyOptions');
+const varySlider = document.getElementById('varySlider');
+const varyValue = document.getElementById('varyValue');
 
 autoCorrectCheckbox.checked = settings.autoCorrect;
+autoTypeCheckbox.checked = settings.autoType;
+wpmSlider.value = settings.autoTypeWpm;
+wpmValue.value = settings.autoTypeWpm;
+varyCheckbox.checked = settings.vary;
+varySlider.value = settings.varyStrength;
+varyValue.value = settings.varyStrength;
+
+if (settings.autoType) autoTypeOptions.classList.remove('hidden');
+if (settings.vary) varyOptions.classList.remove('hidden');
 
 let settingsOpen = false;
-
-function openSettings() {
-  settingsOpen = true;
-  settingsPanel.classList.remove('hidden');
-}
-function closeSettings() {
-  settingsOpen = false;
-  settingsPanel.classList.add('hidden');
-}
+function openSettings() { settingsOpen = true; settingsPanel.classList.remove('hidden'); }
+function closeSettings() { settingsOpen = false; settingsPanel.classList.add('hidden'); }
 
 settingsTrigger.addEventListener('click', (e) => {
   e.stopPropagation();
-  if (settingsOpen) closeSettings();
-  else openSettings();
+  if (settingsOpen) closeSettings(); else openSettings();
 });
 
 document.addEventListener('pointerdown', (e) => {
@@ -590,10 +817,81 @@ document.addEventListener('pointerdown', (e) => {
 
 autoCorrectCheckbox.addEventListener('change', () => {
   settings.autoCorrect = autoCorrectCheckbox.checked;
-  try {
-    localStorage.setItem('typingchallenge-settings', JSON.stringify(settings));
-  } catch (e) {}
+  saveSettings();
 });
+
+autoTypeCheckbox.addEventListener('change', () => {
+  settings.autoType = autoTypeCheckbox.checked;
+  if (settings.autoType) autoTypeOptions.classList.remove('hidden');
+  else autoTypeOptions.classList.add('hidden');
+  saveSettings();
+});
+
+wpmSlider.addEventListener('input', () => {
+  settings.autoTypeWpm = parseInt(wpmSlider.value, 10);
+  wpmValue.value = settings.autoTypeWpm;
+  saveSettings();
+});
+
+varyCheckbox.addEventListener('change', () => {
+  settings.vary = varyCheckbox.checked;
+  if (settings.vary) varyOptions.classList.remove('hidden');
+  else varyOptions.classList.add('hidden');
+  saveSettings();
+});
+
+varySlider.addEventListener('input', () => {
+  settings.varyStrength = parseInt(varySlider.value, 10);
+  varyValue.value = settings.varyStrength;
+  saveSettings();
+});
+
+function clampInt(raw, min, max, fallback) {
+  let v = parseInt(raw, 10);
+  if (isNaN(v)) v = fallback;
+  if (v < min) v = min;
+  if (v > max) v = max;
+  return v;
+}
+
+function bindEditableValue(inputEl, sliderEl, settingsKey, min, max) {
+  inputEl.addEventListener('focus', () => {
+    try { inputEl.select(); } catch (e) {}
+  });
+
+  inputEl.addEventListener('input', () => {
+    const v = parseInt(inputEl.value, 10);
+    if (isNaN(v)) return;
+    const clamped = Math.max(min, Math.min(max, v));
+    sliderEl.value = clamped;
+    settings[settingsKey] = clamped;
+    saveSettings();
+  });
+
+  inputEl.addEventListener('blur', () => {
+    const fallback = parseInt(sliderEl.value, 10) || min;
+    const v = clampInt(inputEl.value, min, max, fallback);
+    inputEl.value = v;
+    sliderEl.value = v;
+    settings[settingsKey] = v;
+    saveSettings();
+  });
+
+  inputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      inputEl.blur();
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      inputEl.value = settings[settingsKey];
+      inputEl.blur();
+    }
+  });
+}
+
+bindEditableValue(wpmValue, wpmSlider, 'autoTypeWpm', 1, 1000);
+bindEditableValue(varyValue, varySlider, 'varyStrength', 0, 1000);
 
 function escapeHtml(c) {
   if (c === '&') return '&amp;';
@@ -622,8 +920,57 @@ function setInputValue(val) {
   } catch (e) {}
 }
 
+function stopAutoType() {
+  if (autoTypeTimer) {
+    clearTimeout(autoTypeTimer);
+    autoTypeTimer = null;
+  }
+}
+
+function computeAutoTypeDelay() {
+  let wpm = settings.autoTypeWpm;
+  if (settings.vary && settings.varyStrength > 0) {
+    const offset = (Math.random() * 2 - 1) * settings.varyStrength;
+    wpm = wpm + offset;
+    if (wpm < 1) wpm = 1;
+  }
+  if (wpm < 1) wpm = 1;
+  return Math.max(1, 12000 / wpm);
+}
+
+function scheduleNextAutoTypeChar() {
+  stopAutoType();
+  if (!settings.autoType) return;
+  if (!state.playing || state.sessionComplete) return;
+  const delayMs = computeAutoTypeDelay();
+  autoTypeTimer = setTimeout(autoTypeStep, delayMs);
+}
+
+function autoTypeStep() {
+  autoTypeTimer = null;
+  if (!settings.autoType) return;
+  if (!state.playing || state.sessionComplete) return;
+
+  const target = state.currentWord;
+  const current = hiddenInput.value;
+
+  if (!target || current.length >= target.length) {
+    scheduleNextAutoTypeChar();
+    return;
+  }
+
+  const nextChar = target[current.length];
+  setInputValue(current + nextChar);
+  syncInput();
+
+  if (!state.sessionComplete) {
+    scheduleNextAutoTypeChar();
+  }
+}
+
 function startGame(difficulty) {
   closeSettings();
+  stopAutoType();
 
   state.difficulty = difficulty;
   state.wordPool = buildSessionPool(WORDS[difficulty]);
@@ -643,14 +990,28 @@ function startGame(difficulty) {
   resultsOverlay.classList.add('hidden');
   backBtn.classList.add('visible');
 
+  renderedStart = 0;
+  renderedEnd = 0;
+  currentTrackOffset = 0;
+  trackOffsetReady = false;
+  lastMode = null;
   caret.ready = false;
   caret.visible = false;
   caretEl.classList.remove('visible');
+  wordTrackEl.style.transform = '';
 
   renderWord();
   updateStats();
   updateProgress();
   openKeyboard();
+
+  if (settings.autoType) {
+    setTimeout(() => {
+      if (settings.autoType && state.playing && !state.sessionComplete) {
+        scheduleNextAutoTypeChar();
+      }
+    }, 120);
+  }
 }
 
 function renderWord() {
@@ -658,31 +1019,76 @@ function renderWord() {
   const input = hiddenInput.value;
   const caretPos = input.length;
   const totalLen = Math.max(target.length, input.length);
-  let html = '';
-  let anchorInserted = false;
 
-  for (let i = 0; i < totalLen; i++) {
+  let start, end;
+
+  if (totalLen <= VIRTUALIZE_THRESHOLD) {
+    start = 0;
+    end = totalLen;
+  } else {
+    const bufStart = renderedStart + WINDOW_BUFFER;
+    const bufEnd = renderedEnd - WINDOW_BUFFER;
+    if (caretPos >= bufStart && caretPos <= bufEnd && (renderedEnd - renderedStart) > 100) {
+      start = renderedStart;
+      end = renderedEnd;
+    } else {
+      start = Math.max(0, caretPos - 200);
+      end = Math.min(totalLen, start + WINDOW_SIZE);
+      if (end - start < WINDOW_SIZE) {
+        start = Math.max(0, end - WINDOW_SIZE);
+      }
+    }
+  }
+
+  renderedStart = start;
+  renderedEnd = end;
+
+  let html = '';
+  if (start > 0) {
+    html += '<span class="virtual-spacer" style="width:' + start + 'ch"></span>';
+  }
+
+  for (let i = start; i < end; i++) {
     if (i === caretPos) {
       html += '<span class="caret-anchor"></span>';
-      anchorInserted = true;
     }
-
     if (i < target.length) {
       let cls = 'letter';
       if (i < input.length) {
         cls += input[i].toLowerCase() === target[i].toLowerCase() ? ' correct' : ' wrong';
       }
       html += '<span class="' + cls + '">' + escapeHtml(target[i]) + '</span>';
-    } else {
+    } else if (i < input.length) {
       html += '<span class="letter extra">' + escapeHtml(input[i]) + '</span>';
     }
   }
 
-  if (!anchorInserted) {
+  if (caretPos >= end) {
     html += '<span class="caret-anchor"></span>';
   }
 
-  wordDisplayEl.innerHTML = html;
+  wordTrackEl.innerHTML = html;
+
+  const mode = isTreadmillMode() ? 'treadmill' : 'centered';
+  if (mode !== lastMode) {
+    lastMode = mode;
+    trackOffsetReady = false;
+    caret.ready = false;
+  }
+
+  if (mode === 'treadmill') {
+    wordDisplayEl.classList.add('fade');
+  } else {
+    wordDisplayEl.classList.remove('fade');
+  }
+}
+
+function isTreadmillMode() {
+  const fontSize = parseFloat(getComputedStyle(wordTrackEl).fontSize) || 30;
+  const charWidth = fontSize * 0.6;
+  const wordWidth = state.currentWord.length * charWidth;
+  const viewportWidth = wordDisplayEl.clientWidth;
+  return wordWidth > viewportWidth * TREADMILL_WIDTH_RATIO;
 }
 
 function updateProgress() {
@@ -770,6 +1176,8 @@ function syncInput() {
 function onWordComplete() {
   state.wordsCompleted++;
 
+  stopAutoType();
+
   if (state.wordsCompleted >= SESSION_LENGTH) {
     state.sessionComplete = true;
     state.playing = false;
@@ -789,17 +1197,25 @@ function onWordComplete() {
   hiddenInput.value = '';
   state.lastValue = '';
 
-  caret.ready = false;
-
   setTimeout(() => {
     wordDisplayEl.classList.remove('complete');
+    renderedStart = 0;
+    renderedEnd = 0;
+    trackOffsetReady = false;
+    caret.ready = false;
+    lastMode = null;
     renderWord();
     updateStats();
     updateProgress();
+
+    if (settings.autoType && state.playing && !state.sessionComplete) {
+      scheduleNextAutoTypeChar();
+    }
   }, 200);
 }
 
 function endGame() {
+  stopAutoType();
   updateElapsed();
   const total = state.correctChars + state.wrongChars;
   const acc = total === 0 ? 100 : Math.round((state.correctChars / total) * 100);
@@ -816,6 +1232,10 @@ function endGame() {
   backBtn.classList.remove('visible');
   caretEl.classList.remove('visible');
   caret.visible = false;
+
+  wordTrackEl.innerHTML = '';
+  wordTrackEl.style.transform = '';
+  wordDisplayEl.classList.remove('fade');
 
   resultsOverlay.classList.remove('hidden');
   hiddenInput.blur();
@@ -848,6 +1268,7 @@ function mainLoop(ts) {
     if (hiddenInput.value !== state.lastValue) {
       syncInput();
     }
+    updateTrackOffset(dt);
     updateCaret(dt);
   } else {
     if (caret.visible) {
@@ -860,8 +1281,36 @@ function mainLoop(ts) {
 }
 requestAnimationFrame(mainLoop);
 
+function updateTrackOffset(dt) {
+  const anchor = wordTrackEl.querySelector('.caret-anchor');
+  if (!anchor) return;
+
+  const mode = lastMode || 'centered';
+  let targetOffset;
+
+  if (mode === 'treadmill') {
+    const caretX = anchor.offsetLeft;
+    const fixedX = wordDisplayEl.clientWidth * FIXED_X_RATIO;
+    targetOffset = caretX - fixedX;
+  } else {
+    const trackWidth = wordTrackEl.scrollWidth;
+    const viewportWidth = wordDisplayEl.clientWidth;
+    targetOffset = (trackWidth - viewportWidth) / 2;
+  }
+
+  if (!trackOffsetReady) {
+    currentTrackOffset = targetOffset;
+    trackOffsetReady = true;
+  } else {
+    const ease = 1 - Math.exp(-dt * 14);
+    currentTrackOffset += (targetOffset - currentTrackOffset) * ease;
+  }
+
+  wordTrackEl.style.transform = 'translateX(' + (-currentTrackOffset) + 'px)';
+}
+
 function updateCaret(dt) {
-  const anchor = wordDisplayEl.querySelector('.caret-anchor');
+  const anchor = wordTrackEl.querySelector('.caret-anchor');
   if (!anchor) {
     if (caret.visible) {
       caretEl.classList.remove('visible');
@@ -873,27 +1322,33 @@ function updateCaret(dt) {
   const rect = anchor.getBoundingClientRect();
   let h = rect.height;
   if (h < 5) {
-    const fs = parseFloat(getComputedStyle(wordDisplayEl).fontSize);
+    const fs = parseFloat(getComputedStyle(wordTrackEl).fontSize);
     h = fs * 1.05;
   }
 
-  caret.targetX = rect.left;
-  caret.targetY = rect.top + (rect.height - h) / 2;
-  caret.targetH = h;
+  const mode = lastMode || 'centered';
+  let targetX;
+  if (mode === 'treadmill') {
+    const vpRect = wordDisplayEl.getBoundingClientRect();
+    targetX = vpRect.left + wordDisplayEl.clientWidth * FIXED_X_RATIO;
+  } else {
+    targetX = rect.left;
+  }
 
+  const targetY = rect.top + (rect.height - h) / 2;
+
+  caret.x = targetX;
   if (!caret.ready) {
-    caret.x = caret.targetX;
-    caret.y = caret.targetY;
-    caret.h = caret.targetH;
+    caret.y = targetY;
+    caret.h = h;
     caret.ready = true;
   } else {
     const ease = 1 - Math.exp(-dt * 14);
-    caret.x += (caret.targetX - caret.x) * ease;
-    caret.y += (caret.targetY - caret.y) * ease;
-    caret.h += (caret.targetH - caret.h) * ease;
+    caret.y += (targetY - caret.y) * ease;
+    caret.h += (h - caret.h) * ease;
   }
 
-  caretEl.style.transform = `translate(${caret.x}px, ${caret.y}px)`;
+  caretEl.style.transform = 'translate(' + caret.x + 'px, ' + caret.y + 'px)';
   caretEl.style.height = caret.h + 'px';
 
   if (!caret.visible) {
@@ -919,12 +1374,20 @@ document.addEventListener('pointerdown', tapFocusHandler, { passive: true });
 function restart() { startGame(state.difficulty); }
 
 function backToMenu() {
+  stopAutoType();
   state.playing = false;
   state.sessionComplete = true;
   hiddenInput.value = '';
   state.lastValue = '';
   state.currentWord = '';
-  wordDisplayEl.innerHTML = '';
+  wordTrackEl.innerHTML = '';
+  wordTrackEl.style.transform = '';
+  wordDisplayEl.classList.remove('fade');
+  renderedStart = 0;
+  renderedEnd = 0;
+  currentTrackOffset = 0;
+  trackOffsetReady = false;
+  lastMode = null;
   resultsOverlay.classList.add('hidden');
   menuOverlay.classList.remove('hidden');
   backBtn.classList.remove('visible');
@@ -958,6 +1421,15 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' || e.key === ' ') {
     e.preventDefault();
     startGame(state.difficulty);
+  }
+});
+
+window.addEventListener('resize', () => {
+  if (state.playing && !state.sessionComplete) {
+    trackOffsetReady = false;
+    caret.ready = false;
+    lastMode = null;
+    renderWord();
   }
 });
 
